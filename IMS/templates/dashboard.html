@@ -4,31 +4,31 @@
 <div class="row g-4 mb-4">
     <!-- Sales Card -->
     <div class="col-md-4">
-        <div class="card p-3">
+        <div class="card p-3 shadow-sm border-0">
             <div class="d-flex align-items-center">
                 <div class="btn btn-primary btn-lg rounded-circle me-3"><i class="bi bi-currency-dollar"></i></div>
                 <div>
                     <h6 class="text-muted mb-0">Total Sales</h6>
-                    <h4 class="fw-bold mb-0">${{ total_sales }}</h4>
+                    <h4 class="fw-bold mb-0">${{ total_sales|default:"0" }}</h4>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Orders Card -->0
+    <!-- POS Card -->
     <div class="col-md-4">
-        <div class="card p-3">
+        <div class="card p-3 shadow-sm border-0">
             <div class="d-flex align-items-center">
                 <div class="btn btn-success btn-lg rounded-circle me-3"><i class="bi bi-cart"></i></div>
                 <div>
-                    <h6 class="text-muted mb-0">Total Orders</h6>
-                    <h4 class="fw-bold mb-0">{{ total_orders }}</h4>
+                    <h6 class="text-muted mb-0">Total POS Transactions</h6>
+                    <h4 class="fw-bold mb-0">{{ total_orders|default:"0" }}</h4>
                 </div>
             </div>
         </div>
     </div>
     <!-- Inventory Alert Card -->
     <div class="col-md-4">
-        <div class="card p-3">
+        <div class="card p-3 shadow-sm border-0">
             <div class="d-flex align-items-center">
                 <div class="btn btn-warning btn-lg rounded-circle me-3 text-white"><i class="bi bi-exclamation-triangle"></i></div>
                 <div>
@@ -42,38 +42,41 @@
 
 <div class="row">
     <div class="col-md-8">
-        <div class="card p-4">
+        <div class="card p-4 shadow-sm border-0">
             <h5>Sales Performance</h5>
-            <canvas id="salesChart" height="150"></canvas>
+            <!-- Only ONE canvas tag here -->
+            <div style="height: 300px;">
+                <canvas id="salesChart"></canvas>
+            </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card p-4">
+        <div class="card p-4 shadow-sm border-0">
             <h5>Top Categories</h5>
             <ul class="list-group list-group-flush mt-3">
-                <li class="list-group-item d-flex justify-content-between">T-Shirts <span class="badge bg-primary">45%</span></li>
-                <li class="list-group-item d-flex justify-content-between">Jeans <span class="badge bg-primary">30%</span></li>
-                <li class="list-group-item d-flex justify-content-between">Jackets <span class="badge bg-primary">25%</span></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">T-Shirts <span class="badge bg-primary rounded-pill">45%</span></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">Jeans <span class="badge bg-primary rounded-pill">30%</span></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">Jackets <span class="badge bg-primary rounded-pill">25%</span></li>
             </ul>
         </div>
     </div>
 </div>
-{% endblock %}
 
-<<script>
-    // This ensures the script waits until the whole page (and library) is ready
-    window.onload = function() {
-        const canvas = document.getElementById('salesChart');
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Ensure the script runs only AFTER the page and Chart.js are fully loaded
+    window.addEventListener('load', function() {
+        const ctx = document.getElementById('salesChart');
         
-        if (canvas && typeof Chart !== 'undefined') {
-            const ctx = canvas.getContext('2d');
+        if (ctx) {
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: {{ labels|safe|default:"['Mon', 'Tue', 'Wed']" }},
+                    labels: {{ labels|safe|default:"[]" }},
                     datasets: [{
                         label: 'Revenue ($)',
-                        data: {{ data|safe|default:"[0, 0, 0]" }},
+                        data: {{ data|safe|default:"[]" }},
                         borderColor: '#0d6efd',
                         backgroundColor: 'rgba(13, 110, 253, 0.1)',
                         fill: true,
@@ -82,12 +85,13 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
                 }
             });
-            console.log("Chart Success!");
-        } else {
-            console.error("Chart library still not found or canvas missing.");
         }
-    };
+    });
 </script>
+{% endblock %}

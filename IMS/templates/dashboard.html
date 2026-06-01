@@ -1,6 +1,24 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    /* Card Hover Effect */
+    .card {
+        transition: transform 0.2s;
+        border: none;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Standard Blue Primary Icon Backgrounds */
+    .bg-blue-soft {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+</style>
+
 <div class="row g-4 mb-4">
     <!-- Sales Card -->
     <div class="col-md-4">
@@ -9,7 +27,7 @@
                 <div class="btn btn-primary btn-lg rounded-circle me-3"><i class="bi bi-currency-dollar"></i></div>
                 <div>
                     <h6 class="text-muted mb-0">Total Sales</h6>
-                    <h4 class="fw-bold mb-0">${{ total_sales|default:"0" }}</h4>
+                    <h4 class="fw-bold mb-0">Rs.{{ total_sales|default:"0" }}</h4>
                 </div>
             </div>
         </div>
@@ -18,7 +36,7 @@
     <div class="col-md-4">
         <div class="card p-3 shadow-sm border-0">
             <div class="d-flex align-items-center">
-                <div class="btn btn-success btn-lg rounded-circle me-3"><i class="bi bi-cart"></i></div>
+                <div class="btn btn-primary btn-lg rounded-circle me-3"><i class="bi bi-cart"></i></div>
                 <div>
                     <h6 class="text-muted mb-0">Total POS Transactions</h6>
                     <h4 class="fw-bold mb-0">{{ total_orders|default:"0" }}</h4>
@@ -30,7 +48,8 @@
     <div class="col-md-4">
         <div class="card p-3 shadow-sm border-0">
             <div class="d-flex align-items-center">
-                <div class="btn btn-warning btn-lg rounded-circle me-3 text-white"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="btn btn-primary btn-lg rounded-circle me-3 text-white"><i
+                        class="bi bi-exclamation-triangle"></i></div>
                 <div>
                     <h6 class="text-muted mb-0">Low Stock</h6>
                     <h4 class="fw-bold mb-0 text-danger">{{ low_stock }} Items</h4>
@@ -44,53 +63,71 @@
     <div class="col-md-8">
         <div class="card p-4 shadow-sm border-0">
             <h5>Sales Performance</h5>
-            <!-- Only ONE canvas tag here -->
             <div style="height: 300px;">
                 <canvas id="salesChart"></canvas>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card p-4 shadow-sm border-0">
-            <h5>Top Categories</h5>
-            <ul class="list-group list-group-flush mt-3">
-                <li class="list-group-item d-flex justify-content-between align-items-center">T-Shirts <span class="badge bg-primary rounded-pill">45%</span></li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">Jeans <span class="badge bg-primary rounded-pill">30%</span></li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">Jackets <span class="badge bg-primary rounded-pill">25%</span></li>
-            </ul>
-        </div>
-    </div>
 </div>
 
+<!-- Real Categories (Moved to the Right Sidebar) -->
+<div class="col-md-4">
+    <div class="card p-4 shadow-sm border-0">
+        <h5 class="mb-3">Top Categories</h5>
+        <ul class="list-group list-group-flush">
+            {% for cat in top_categories %}
+            <li class="list-group-item px-0 border-0">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="small fw-bold">{{ cat.name }}</span>
+                    <span class="small text-muted">{{ cat.percentage|floatformat:0 }}%</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-primary" style="width: {{ cat.percentage }}%"></div>
+                </div>
+            </li>
+            {% empty %}
+            <li class="text-muted small">No sales recorded.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+</div>
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Ensure the script runs only AFTER the page and Chart.js are fully loaded
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
         const ctx = document.getElementById('salesChart');
-        
+
         if (ctx) {
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: {{ labels|safe|default:"[]" }},
-                    datasets: [{
-                        label: 'Revenue ($)',
-                        data: {{ data|safe|default:"[]" }},
-                        borderColor: '#0d6efd',
-                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true }
+            const chartLabels = {{ labels|default:"[]" | safe}};
+    const chartData = {{ data|default:"[]" | safe}};
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Revenue (Rs.)',
+                data: chartData,
+                borderColor: '#0d6efd', // REVERTED TO ORIGINAL BLUE
+                backgroundColor: 'rgba(13, 110, 253, 0.1)', // SOFT BLUE FILL
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) { return 'Rs.' + value; }
                     }
                 }
-            });
+            }
+        }
+    });
         }
     });
 </script>

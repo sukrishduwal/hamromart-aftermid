@@ -41,6 +41,14 @@ class Sale(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+     # This creates a professional Bill Number
+    @property
+    def bill_no(self):
+        return f"INV-{self.id + 1000}" # Starts at INV-1001
+
+    def __str__(self):
+        return self.bill_no
+
 class SaleItem(models.Model):
     sale = models.ForeignKey(Sale, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)

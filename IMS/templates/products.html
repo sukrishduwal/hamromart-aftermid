@@ -58,10 +58,10 @@
         </td>
 
         {% if user.is_staff %}
-        <!-- The $ is now INSIDE the if block, so no stray $ for non-admins -->
-        <td class="text-muted">${{ product.cost_price }}</td>
-        <td class="fw-bold text-dark">${{ product.selling_price }}</td>
-        <td class="text-success fw-bold">${{ product.profit_per_unit }}</td>
+        <!-- The Rs. is now INSIDE the if block, so no stray Rs. for non-admins -->
+        <td class="text-muted">Rs.{{ product.cost_price }}</td>
+        <td class="fw-bold text-dark">Rs.{{ product.selling_price }}</td>
+        <td class="text-success fw-bold">Rs.{{ product.profit_per_unit }}</td>
         {% endif %}
 
         <td>

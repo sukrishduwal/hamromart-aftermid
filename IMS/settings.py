@@ -116,8 +116,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# This tells Django to look for a folder named 'static' in your root directory
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 # settings.py
 import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+LOGIN_URL = '/login/' # Redirect to login page if not authenticated
+LOGOUT_REDIRECT_URL = '/login/' # Or use '/admin/login/' if you don't have a custom login page
+LOGIN_REDIRECT_URL = 'dashboard' # Ensure this matches your actual login URL

@@ -3,15 +3,19 @@ from multiprocessing import context
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.db.models import Sum , F, FloatField, ExpressionWrapper
-from .models import Product, Category, Customer, Sale, SaleItem
+from .models import Product, Category, Customer, Sale, SaleItem, Purchase
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models.functions import TruncDay
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from .forms import ProductForm
 
 # --- 1. DASHBOARD VIEW (Updated to use POS Sales) ---
 @login_required
 def admin_dashboard(request):
+    if not request.user.is_superuser:
+        return redirect('product_list')
     products = Product.objects.all()
     
     # 1. KPI Stats
@@ -58,9 +62,42 @@ def product_list(request):
     return render(request, 'products.html', {'products': products})
 @login_required
 def delete_product(request, pk):
+    if not request.user.is_superuser:
+        raise PermissionDenied("Only administrators are allowed to delete products.")
     product = get_object_or_404(Product, id=pk)
     product.delete()
     return redirect('product_list')
+
+@login_required
+def add_product(request):
+    if not request.user.is_superuser:
+        raise PermissionDenied("Only administrators are allowed to add products.")
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, user=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('product_list')
+    else:
+        form = ProductForm(user=request.user)
+    return render(request, 'product_form.html', {'form': form, 'title': 'Add Product'})
+
+@login_required
+def update_product(request, pk):
+    product = get_object_or_404(Product, id=pk)
+    # Store the original cost price to prevent regular users from accidentally changing/resetting it.
+    original_cost_price = product.cost_price
+    
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product, user=request.user)
+        if form.is_valid():
+            prod = form.save(commit=False)
+            if not request.user.is_superuser:
+                prod.cost_price = original_cost_price
+            prod.save()
+            return redirect('product_list')
+    else:
+        form = ProductForm(instance=product, user=request.user)
+    return render(request, 'product_form.html', {'form': form, 'title': 'Edit Product'})
 @login_required
 # --- 3. NEW POS SYSTEM VIEWS ---
 def pos_view(request):
@@ -123,6 +160,8 @@ def process_sale(request):
 # Add this function at the bottom
 @login_required
 def sales_report(request):
+    if not request.user.is_superuser:
+        raise PermissionDenied("Only administrators are allowed to view sales reports.")
     total_revenue = Sale.objects.aggregate(Sum('total'))['total__sum'] or 0
     total_tax = Sale.objects.aggregate(Sum('tax'))['tax__sum'] or 0
     total_orders = Sale.objects.count()
@@ -131,13 +170,20 @@ def sales_report(request):
     all_sold_items = SaleItem.objects.all()
     total_profit = sum(item.quantity * (item.product.selling_price - item.product.cost_price) for item in all_sold_items)
 
-    # Top 5 Selling Products
-    top_products = SaleItem.objects.values('product__name').annotate(
-        total_qty=Sum('quantity')
-    ).order_by('-total_qty')[:5]
+    # Recent Sales with related customer and items
+    recent_sales = Sale.objects.select_related('customer').prefetch_related('items__product').order_by('-timestamp')[:10]
 
-    # Recent Sales
-    recent_sales = Sale.objects.all().order_by('-timestamp')[:10]
+    # Purchase history for products in recent sales
+    product_ids = SaleItem.objects.filter(sale__in=recent_sales).values_list('product_id', flat=True).distinct()
+    purchase_history = Purchase.objects.filter(product_id__in=product_ids).select_related('product').order_by('-purchase_date')
+    top_products = SaleItem.objects.values('product__name').annotate(total_qty=Sum('quantity')).order_by('-total_qty')[:5]
+
+    # Customer summary stats
+    from django.db.models import Count
+    customer_stats = Customer.objects.annotate(
+        total_spent=Sum('sale__total'),
+        order_count=Count('sale')
+    )
 
     context = {
         'revenue': total_revenue,
@@ -146,11 +192,15 @@ def sales_report(request):
         'profit': total_profit,
         'top_products': top_products,
         'recent_sales': recent_sales,
+        'customer_stats': customer_stats,
+        'purchase_history': purchase_history,
     }
     return render(request, 'sales_report.html', context)
 
 @login_required
 def receipt_detail(request, pk):
+    if not request.user.is_superuser:
+        raise PermissionDenied("Only administrators are allowed to view receipt details.")
     # Fetch the specific sale or show 404 if not found
     sale = get_object_or_404(Sale, pk=pk)
     # The template will use sale.items.all() because of the related_name in SaleItem

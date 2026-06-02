@@ -1,133 +1,213 @@
 {% extends 'base.html' %}
 
+{% block page_title %}Dashboard Overview{% endblock %}
+
 {% block content %}
 <style>
-    /* Card Hover Effect */
-    .card {
-        transition: transform 0.2s;
-        border: none;
+    /* Card Accent Backdrops */
+    .icon-box {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
     }
-
-    .card:hover {
-        transform: translateY(-5px);
+    
+    .card-sales .icon-box {
+        background-color: rgba(99, 102, 241, 0.1);
+        color: var(--primary);
     }
-
-    /* Standard Blue Primary Icon Backgrounds */
-    .bg-blue-soft {
-        background-color: rgba(13, 110, 253, 0.1);
-        color: #0d6efd;
+    
+    .card-orders .icon-box {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    .card-stock .icon-box {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .card-premium:hover .icon-box {
+        transform: scale(1.1);
     }
 </style>
 
+<div class="mb-4">
+    <h3 class="fw-extrabold text-dark mb-1">Dashboard Overview</h3>
+    <p class="text-muted small mb-0">Monitor sales performance, stocks, and business growth.</p>
+</div>
+
+<!-- Summary Cards Grid -->
 <div class="row g-4 mb-4">
     <!-- Sales Card -->
     <div class="col-md-4">
-        <div class="card p-3 shadow-sm border-0">
+        <div class="card card-premium card-sales border-0 p-4">
             <div class="d-flex align-items-center">
-                <div class="btn btn-primary btn-lg rounded-circle me-3"><i class="bi bi-currency-dollar"></i></div>
+                <div class="icon-box me-3">
+                    <i class="bi bi-wallet2"></i>
+                </div>
                 <div>
-                    <h6 class="text-muted mb-0">Total Sales</h6>
-                    <h4 class="fw-bold mb-0">Rs.{{ total_sales|default:"0" }}</h4>
+                    <h6 class="text-muted small fw-bold text-uppercase mb-1" style="letter-spacing: 0.5px;">Total Revenue</h6>
+                    <h3 class="fw-extrabold text-dark mb-0">Rs.{{ total_sales|default:"0"|floatformat:2 }}</h3>
                 </div>
             </div>
         </div>
     </div>
+    
     <!-- POS Card -->
     <div class="col-md-4">
-        <div class="card p-3 shadow-sm border-0">
+        <div class="card card-premium card-orders border-0 p-4">
             <div class="d-flex align-items-center">
-                <div class="btn btn-primary btn-lg rounded-circle me-3"><i class="bi bi-cart"></i></div>
+                <div class="icon-box me-3">
+                    <i class="bi bi-cart3"></i>
+                </div>
                 <div>
-                    <h6 class="text-muted mb-0">Total POS Transactions</h6>
-                    <h4 class="fw-bold mb-0">{{ total_orders|default:"0" }}</h4>
+                    <h6 class="text-muted small fw-bold text-uppercase mb-1" style="letter-spacing: 0.5px;">POS Transactions</h6>
+                    <h3 class="fw-extrabold text-dark mb-0">{{ total_orders|default:"0" }}</h3>
                 </div>
             </div>
         </div>
     </div>
+    
     <!-- Inventory Alert Card -->
     <div class="col-md-4">
-        <div class="card p-3 shadow-sm border-0">
+        <div class="card card-premium card-stock border-0 p-4">
             <div class="d-flex align-items-center">
-                <div class="btn btn-primary btn-lg rounded-circle me-3 text-white"><i
-                        class="bi bi-exclamation-triangle"></i></div>
+                <div class="icon-box me-3">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
                 <div>
-                    <h6 class="text-muted mb-0">Low Stock</h6>
-                    <h4 class="fw-bold mb-0 text-danger">{{ low_stock }} Items</h4>
+                    <h6 class="text-muted small fw-bold text-uppercase mb-1" style="letter-spacing: 0.5px;">Low Stock Alerts</h6>
+                    <h3 class="fw-extrabold text-danger mb-0">{{ low_stock }} Items</h3>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card p-4 shadow-sm border-0">
-            <h5>Sales Performance</h5>
-            <div style="height: 300px;">
+<!-- Graphs and Side Panels -->
+<div class="row g-4">
+    <!-- Chart Panel -->
+    <div class="col-lg-8">
+        <div class="card card-premium border-0 p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="fw-bold text-dark mb-1">Sales Performance</h5>
+                    <p class="text-muted small mb-0">Recent revenue trend over the past 7 days.</p>
+                </div>
+                <span class="badge bg-light text-dark border">Weekly</span>
+            </div>
+            <div style="height: 320px; position: relative;">
                 <canvas id="salesChart"></canvas>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Real Categories (Moved to the Right Sidebar) -->
-<div class="col-md-4">
-    <div class="card p-4 shadow-sm border-0">
-        <h5 class="mb-3">Top Categories</h5>
-        <ul class="list-group list-group-flush">
-            {% for cat in top_categories %}
-            <li class="list-group-item px-0 border-0">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="small fw-bold">{{ cat.name }}</span>
-                    <span class="small text-muted">{{ cat.percentage|floatformat:0 }}%</span>
-                </div>
-                <div class="progress" style="height: 6px;">
-                    <div class="progress-bar bg-primary" style="width: {{ cat.percentage }}%"></div>
-                </div>
-            </li>
-            {% empty %}
-            <li class="text-muted small">No sales recorded.</li>
-            {% endfor %}
-        </ul>
+    <!-- Category Distribution -->
+    <div class="col-lg-4">
+        <div class="card card-premium border-0 p-4 h-100">
+            <h5 class="fw-bold text-dark mb-3">Top Product Categories</h5>
+            <p class="text-muted small mb-4">Percentage breakdown of items sold.</p>
+            <ul class="list-group list-group-flush">
+                {% for cat in top_categories %}
+                <li class="list-group-item px-0 py-3 border-0">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-bold text-dark" style="font-size: 0.9rem;">{{ cat.name }}</span>
+                        <span class="small text-muted fw-bold">{{ cat.percentage|floatformat:0 }}%</span>
+                    </div>
+                    <div class="progress" style="height: 8px; border-radius: 4px; background-color: #f1f5f9;">
+                        <div class="progress-bar" style="width: {{ cat.percentage }}%; border-radius: 4px; background-color: var(--primary);"></div>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="text-muted small py-4 text-center">
+                    <i class="bi bi-inbox d-block text-secondary mb-2" style="font-size: 2rem;"></i>
+                    No sales data recorded yet.
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 </div>
-</div>
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     window.addEventListener('load', function () {
         const ctx = document.getElementById('salesChart');
 
         if (ctx) {
-            const chartLabels = {{ labels|default:"[]" | safe}};
-    const chartData = {{ data|default:"[]" | safe}};
+            const chartLabels = {{ labels|default:"[]" | safe }};
+            const chartData = {{ data|default:"[]" | safe }};
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartLabels,
-            datasets: [{
-                label: 'Revenue (Rs.)',
-                data: chartData,
-                borderColor: '#0d6efd', // REVERTED TO ORIGINAL BLUE
-                backgroundColor: 'rgba(13, 110, 253, 0.1)', // SOFT BLUE FILL
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function (value) { return 'Rs.' + value; }
+            // Custom gradient for line fill
+            const ctx2D = ctx.getContext('2d');
+            const gradient = ctx2D.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.25)');
+            gradient.addColorStop(1, 'rgba(99, 102, 241, 0.00)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Daily Revenue',
+                        data: chartData,
+                        borderColor: '#6366f1',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f5f9'
+                            },
+                            border: {
+                                dash: [5, 5]
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: {
+                                    family: 'Plus Jakarta Sans',
+                                    size: 11
+                                },
+                                callback: function (value) { return 'Rs.' + value; }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: {
+                                    family: 'Plus Jakarta Sans',
+                                    size: 11
+                                }
+                            }
+                        }
                     }
                 }
-            }
-        }
-    });
+            });
         }
     });
 </script>

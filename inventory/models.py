@@ -20,8 +20,10 @@ class Product(models.Model):
     def profit_per_unit(self):
         return self.selling_price - self.cost_price
     
-    def __str__(self):
-        return f"{self.name} - {self.size}"
+    @property
+    def latest_supplier(self):
+        latest = self.purchase_set.order_by('-purchase_date').first()
+        return latest.supplier_name if latest else 'N/A'
 
 # --- NEW MODELS START HERE ---
 
@@ -55,8 +57,11 @@ class SaleItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
-class InventoryLog(models.Model):
+class Purchase(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    change_quantity = models.IntegerField()
-    action_type = models.CharField(max_length=50)
-    date = models.DateTimeField(auto_now_add=True)
+    supplier_name = models.CharField(max_length=100)
+    purchase_date = models.DateTimeField(default=timezone.now)
+    purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.supplier_name} - {self.product.name}"

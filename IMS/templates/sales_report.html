@@ -96,5 +96,67 @@
             </div>
         </div>
     </div>
-</div>
+    <!-- Customer Summary Section -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="mb-3">Customer Summary</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Total Spent</th>
+                                <th>Orders</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cust in customer_stats %}
+                            <tr>
+                                <td>{{ cust.name }}</td>
+                                <td>{{ cust.phone }}</td>
+                                <td>Rs.{{ cust.total_spent|default:"0.00"|floatformat:2 }}</td>
+                                <td>{{ cust.order_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Purchase History Section -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="mb-3">Purchase History</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Supplier</th>
+                                <th>Product</th>
+                                <th>Purchase Date</th>
+                                <th>Purchase Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ph in purchase_history %}
+                            <tr>
+                                <td>{{ ph.supplier_name }}</td>
+                                <td>{{ ph.product.name }}</td>
+                                <td>{{ ph.purchase_date|date:"M d, Y" }}</td>
+                                <td>Rs.{{ ph.purchase_price|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center">No purchase records</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}

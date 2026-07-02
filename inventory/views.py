@@ -1,4 +1,5 @@
 import json
+import re
 from multiprocessing import context
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
@@ -10,6 +11,13 @@ from django.db.models.functions import TruncDay
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from .forms import ProductForm
+
+PHONE_NUMBER_RE = re.compile(r'^(97|98)\d{8}$')
+
+
+def is_valid_phone_number(phone):
+    phone = (phone or '').strip()
+    return bool(PHONE_NUMBER_RE.fullmatch(phone))
 
 # --- 1. DASHBOARD VIEW (Updated to use POS Sales) ---
 @login_required
@@ -122,12 +130,19 @@ def process_sale(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
+
+            phone = (data.get('phone') or '').strip()
+            if not is_valid_phone_number(phone):
+                return JsonResponse(
+                    {"status": "error", "message": "Phone number must be exactly 10 digits and start with 97 or 98."},
+                    status=400,
+                )
             
             # Create or identify customer
             customer = None
-            if data.get('phone'):
+            if phone:
                 customer, _ = Customer.objects.get_or_create(
-                    phone=data['phone'], 
+                    phone=phone,
                     defaults={'name': data.get('name', 'Walk-in Customer')}
                 )
             

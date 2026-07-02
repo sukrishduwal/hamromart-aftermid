@@ -36,8 +36,8 @@
             <div class="card p-3 mb-3 border-0 bg-light">
                 <h6>Customer Details</h6>
                 <div class="mb-2">
-                    <input type="text" id="custPhone" class="form-control mb-2" placeholder="Contact Number (Required)"
-                        required>
+                    <input type="tel" id="custPhone" class="form-control mb-2" placeholder="Contact Number (Required)"
+                        inputmode="numeric" maxlength="10" minlength="10" pattern="^(97|98)\d{8}$" required>
                     <input type="text" id="custName" class="form-control" placeholder="Customer Name">
                 </div>
                 <div id="custInfo" class="small text-primary"></div>
@@ -124,8 +124,10 @@ function updateTotals() {
 }
 
 async function checkout() {
-    const phone = document.getElementById('custPhone').value;
-    if (!phone) return alert("Please enter customer contact number");
+    const phone = document.getElementById('custPhone').value.trim();
+    if (!/^(97|98)\d{8}$/.test(phone)) {
+        return alert("Phone number must be exactly 10 digits and start with 97 or 98.");
+    }
     if (cart.length === 0) return alert("Cart is empty");
 
     const data = {

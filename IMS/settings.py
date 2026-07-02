@@ -130,3 +130,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 LOGIN_URL = '/login/' # Redirect to login page if not authenticated
 LOGOUT_REDIRECT_URL = '/login/' # Or use '/admin/login/' if you don't have a custom login page
 LOGIN_REDIRECT_URL = 'dashboard' # Ensure this matches your actual login URL
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.81']  # Add your server's IP address here
+ALLOWED_HOSTS = ['*']

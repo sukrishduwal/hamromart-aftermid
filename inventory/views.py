@@ -108,10 +108,15 @@ def update_product(request, pk):
     return render(request, 'product_form.html', {'form': form, 'title': 'Edit Product'})
 @login_required
 # --- 3. NEW POS SYSTEM VIEWS ---
+
 def pos_view(request):
     """Displays the POS interface"""
+    # Only allow users in the Cashier group and block administrators
+    if request.user.is_superuser or request.user.groups.filter(name='Staff').exists():
+        raise PermissionDenied("Only Cashier users can access the POS section.")
     products = Product.objects.filter(quantity__gt=0)
     return render(request, 'pos.html', {'products': products})
+
 @login_required
 def get_customer_history(request):
     """Retrieves customer name and recent sales via phone number"""

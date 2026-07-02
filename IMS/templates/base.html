@@ -221,6 +221,10 @@
                 <a href="{% url 'product_list' %}" class="nav-link-horizontal {% if url_name == 'product_list' or url_name == 'add_product' or url_name == 'update_product' %}active{% endif %}">
                     <i class="bi bi-box-seam-fill me-2"></i> Inventory
                 </a>
+                
+                <a href="{% url 'pos_view' %}" class="nav-link-horizontal {% if url_name == 'pos_view   ' %}active{% endif %}">
+                    <i class="bi bi-cash-coin me-2"></i> POS
+                </a>
 
                 {% if user.is_superuser %}
                 <a href="{% url 'sales_report' %}" class="nav-link-horizontal {% if url_name == 'sales_report' or url_name == 'receipt_detail' %}active{% endif %}">

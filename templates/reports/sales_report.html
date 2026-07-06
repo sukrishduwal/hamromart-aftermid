@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h3">Financial Sales Report</h2>
+    <button class="btn btn-outline-primary" onclick="window.print()"><i class="bi bi-printer me-2"></i>Print
+        Report</button>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-primary text-white">
+            <h6>Total Revenue</h6>
+            <h3>Rs.{{ revenue|stringformat:".2f" }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-success text-white">
+            <h6>Net Profit</h6>
+            <h3>Rs.{{ profit|stringformat:".2f" }}</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-0 shadow-sm bg-info text-white">
+            <h6>Total Orders</h6>
+            <h3>{{ orders }}</h3>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Top Selling Products -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm p-4 h-100">
+            <h5 class="mb-3">Top 5 Best Sellers</h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in top_products %}
+                        <tr>
+                            <td>{{ item.product__name }}</td>
+                            <td><span class="badge bg-primary rounded-pill">{{ item.total_qty }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Sales Table -->
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm p-4">
+            <h5 class="mb-3">Recent Transactions</h5>
+            <div class="table-responsive">
+                <!-- Inside the Recent Transactions Table in reports.html -->
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Bill No</th> <!-- New Column -->
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in recent_sales %}
+                        <tr>
+                            <td class="fw-bold text-primary">#{{ sale.bill_no }}</td>
+                            <td>{{ sale.timestamp|date:"M d, Y" }}</td>
+                            <td>{{ sale.customer.name }}</td>
+                            <td class="fw-bold">Rs.{{ sale.total }}</td>
+                            <td class="text-center">
+                                <!-- Link to view the exact copy of the bill -->
+                                <a href="{% url 'receipt_detail' sale.id %}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i> View Bill
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- Customer Summary Section -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="mb-3">Customer Summary</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Total Spent</th>
+                                <th>Orders</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cust in customer_stats %}
+                            <tr>
+                                <td>{{ cust.name }}</td>
+                                <td>{{ cust.phone }}</td>
+                                <td>Rs.{{ cust.total_spent|default:"0.00"|floatformat:2 }}</td>
+                                <td>{{ cust.order_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Purchase History Section -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="mb-3">Purchase History</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Supplier</th>
+                                <th>Product</th>
+                                <th>Purchase Date</th>
+                                <th>Purchase Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ph in purchase_history %}
+                            <tr>
+                                <td>{{ ph.supplier_name }}</td>
+                                <td>{{ ph.product.name }}</td>
+                                <td>{{ ph.purchase_date|date:"M d, Y" }}</td>
+                                <td>Rs.{{ ph.purchase_price|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center">No purchase records</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

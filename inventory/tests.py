@@ -38,7 +38,6 @@ class PhoneNumberValidationTests(TestCase):
 				'phone': '9612345678',
 				'name': 'Test Customer',
 				'subtotal': 150,
-				'tax': 7.5,
 				'discount': 0,
 				'total': 157.5,
 				'cart': [{'id': product.id, 'qty': 1, 'price': 150}],

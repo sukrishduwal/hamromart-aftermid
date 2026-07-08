@@ -3,11 +3,11 @@
 {% block content %}
 
 {% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-info">
-            {{ message }}
-        </div>
-    {% endfor %}
+{% for message in messages %}
+<div class="alert alert-info">
+    {{ message }}
+</div>
+{% endfor %}
 {% endif %}
 <div class="container mt-4">
 
@@ -32,17 +32,17 @@
 
                         <tbody>
                             {% for user in staff_list %}
-                                <tr>
-                                    <td>{{ user.username }}</td>
-                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
-                                    <td>
-                                        {% for group in user.groups.all %}
-                                            <span class="badge bg-info">
-                                                {{ group.name }}
-                                            </span>
-                                        {% endfor %}
-                                    </td>
-                                </tr>
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                <td>
+                                    {% for group in user.groups.all %}
+                                    <span class="badge bg-info">
+                                        {{ group.name }}
+                                    </span>
+                                    {% endfor %}
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -68,13 +68,24 @@
 
                         <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name">
 
-                        <input type="password" name="password" class="form-control mb-2" placeholder="Password" required>
+                        <input type="password" name="password" class="form-control mb-2" placeholder="Password"
+                            required>
 
-                        <select name="group" class="form-control mb-3" required>
-                            {% for group in groups %}
-                                <option value="{{ group.id }}">{{ group.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <div class="input-group mb-3">
+                            <select name="group" class="form-control" required>
+                                <option value="" selected disabled>Select Group</option>
+
+                                {% for group in groups %}
+                                <option value="{{ group.id }}">
+                                    {{ group.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <a href="{% url 'add_group' %}" class="btn btn-outline-primary">
+                                + Add
+                            </a>
+                        </div>
 
                         <button type="submit" class="btn btn-success w-100">
                             Add Staff

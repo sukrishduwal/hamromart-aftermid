@@ -4,12 +4,12 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-7">
-        <div class="card card-premium border-0 mb-5">
+    <div class="col-lg-8">
+        <div class="card card-premium border-0 mb-4">
             <div class="card-header bg-primary text-white py-3 px-4 d-flex align-items-center" style="border-radius: 16px 16px 0 0;">
                 <h4 class="mb-0 fw-bold d-flex align-items-center" style="font-size: 1.15rem;">
                     {% if "Add" in title %}
-                    <i class="bi bi-plus-circle-fill me-2" style="font-size: 1.25rem;"></i>
+                    <i class="bi bi-bag-plus-fill me-2" style="font-size: 1.25rem;"></i>
                     {% else %}
                     <i class="bi bi-pencil-square me-2" style="font-size: 1.25rem;"></i>
                     {% endif %}
@@ -18,48 +18,109 @@
             </div>
             <div class="card-body p-4 bg-white" style="border-radius: 0 0 16px 16px;">
                 <p class="text-muted small mb-4">Please fill in the product details below. Required fields are marked with an asterisk (*).</p>
-                
-                <form method="post" enctype="multipart/form-data">
+
+                <form method="post" enctype="multipart/form-data" id="product-form">
                     {% csrf_token %}
-                    
+
                     {% if form.non_field_errors %}
                     <div class="alert alert-danger d-flex align-items-center" role="alert">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <div>
-                            {% for error in form.non_field_errors %}
-                            {{ error }}
-                            {% endfor %}
-                        </div>
+                        <div>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>
                     </div>
                     {% endif %}
 
-                    <div class="row g-4">
-                        {% for field in form %}
-                            {% if field.is_hidden %}
-                                {{ field }}
-                            {% else %}
-                                <div class="col-md-{% if field.name == 'name' or field.name == 'image' %}12{% else %}6{% endif %}">
-                                    <label for="{{ field.id_for_label }}" class="form-label fw-bold text-dark small mb-1.5" style="letter-spacing: 0.2px;">
-                                        {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
-                                    </label>
-                                    {{ field }}
-                                    {% if field.help_text %}
-                                    <div class="form-text text-muted small mt-1">{{ field.help_text }}</div>
-                                    {% endif %}
-                                    {% if field.errors %}
-                                    <div class="text-danger small mt-1 d-flex align-items-center">
-                                        <i class="bi bi-exclamation-circle-fill me-1" style="font-size: 0.85rem;"></i>
-                                        {% for error in field.errors %}
-                                        <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
+                    <!-- ── Section: Basic Info ── -->
+                    <div class="row g-3 mb-3">
+                        <!-- Product Name -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small text-dark">Product Name <span class="text-danger">*</span></label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Category + "+" button -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">Category <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.category }}
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal" title="Add New Category">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                            {% if form.category.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.category.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- SKU (auto-generated) -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">SKU / Barcode <span class="text-danger">*</span></label>
+                            {{ form.sku }}
+                            <div class="form-text text-muted" id="sku-hint">
+                                {% if "Add" in title %}Select a category to auto-generate SKU.{% endif %}
+                            </div>
+                            {% if form.sku.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.sku.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Color -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">Color</label>
+                            {{ form.color }}
+                            {% if form.color.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.color.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Quantity -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">Quantity <span class="text-danger">*</span></label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.quantity.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Cost Price (hidden for non-superusers) -->
+                        {% if not form.cost_price.is_hidden %}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">Cost Price <span class="text-danger">*</span></label>
+                            {{ form.cost_price }}
+                            {% if form.cost_price.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.cost_price.errors.0 }}</div>{% endif %}
+                        </div>
+                        {% else %}
+                            {{ form.cost_price }}
+                        {% endif %}
+
+                        <!-- Selling Price -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">Selling Price <span class="text-danger">*</span></label>
+                            {{ form.selling_price }}
+                            {% if form.selling_price.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.selling_price.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Image -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small text-dark">Product Image</label>
+                            {{ form.image }}
+                            {% if form.image.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.image.errors.0 }}</div>{% endif %}
+                        </div>
                     </div>
 
-                    <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+                    <!-- ── Section: Purchase Info ── -->
+                    <div class="border rounded-3 p-3 mb-4" style="background: linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(99,102,241,0.01) 100%); border-color: rgba(99,102,241,0.2) !important;">
+                        <h6 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                            <i class="bi bi-truck me-2"></i>
+                            {% if "Add" in title %}Initial Purchase Details{% else %}Record New Purchase / Restock{% endif %}
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small text-dark">Supplier Name</label>
+                                {{ form.supplier_name }}
+                                {% if form.supplier_name.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.supplier_name.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small text-dark">Purchase Price (per unit)</label>
+                                {{ form.purchase_price }}
+                                {% if form.purchase_price.errors %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-circle-fill me-1"></i>{{ form.purchase_price.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end pt-3 border-top">
                         <a href="{% url 'product_list' %}" class="btn btn-outline-secondary px-4 me-2">Cancel</a>
                         <button type="submit" class="btn btn-primary px-4 shadow-sm">
                             <i class="bi bi-check-circle me-2"></i>Save Product
@@ -70,4 +131,151 @@
         </div>
     </div>
 </div>
+
+<!-- ── Purchase History (Edit page only) ── -->
+{% if title == "Edit Product" %}
+<div class="row justify-content-center mt-2">
+    <div class="col-lg-8">
+        <div class="card card-premium border-0 mb-5">
+            <div class="card-header py-3 px-4 d-flex align-items-center" style="background: linear-gradient(135deg,#1e293b,#334155); border-radius:16px 16px 0 0;">
+                <h5 class="mb-0 fw-bold text-white d-flex align-items-center" style="font-size: 1rem;">
+                    <i class="bi bi-clock-history me-2 text-primary"></i>Purchase History
+                </h5>
+            </div>
+            <div class="card-body p-0 bg-white" style="border-radius:0 0 16px 16px;">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-4 py-3 small text-uppercase text-muted" style="letter-spacing:.4px;">Supplier</th>
+                                <th class="py-3 small text-uppercase text-muted" style="letter-spacing:.4px;">Purchase Date</th>
+                                <th class="px-4 py-3 small text-uppercase text-muted text-end" style="letter-spacing:.4px;">Purchase Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase in purchases %}
+                            <tr>
+                                <td class="px-4 fw-semibold text-dark">{{ purchase.supplier_name }}</td>
+                                <td class="text-muted small">{{ purchase.purchase_date|date:"M d, Y  H:i" }}</td>
+                                <td class="px-4 text-end fw-bold text-primary">Rs. {{ purchase.purchase_price }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox me-1" style="font-size:1.2rem;"></i> No purchase records yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ── Add Category Modal ── -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:16px;">
+            <div class="modal-header bg-primary text-white py-3 px-4" style="border-radius:16px 16px 0 0;">
+                <h5 class="modal-title fw-bold" id="addCategoryModalLabel">
+                    <i class="bi bi-tag-fill me-2"></i>Add New Category
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="modal-error-message" class="alert alert-danger d-none mb-3 py-2 px-3 small d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i><span id="error-text"></span>
+                </div>
+                <div class="mb-3">
+                    <label for="new-category-name" class="form-label fw-semibold small text-dark">Category Name</label>
+                    <input type="text" id="new-category-name" class="form-control" placeholder="e.g. Tote Bags, Backpacks" required>
+                </div>
+            </div>
+            <div class="modal-footer pt-0 border-0 px-4 pb-4">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal" style="border-radius:10px;">Cancel</button>
+                <button type="button" id="save-category-btn" class="btn btn-primary px-4" style="border-radius:10px;">Save Category</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const isAddPage = {% if "Add" in title %}true{% else %}false{% endif %};
+    const categorySelect = document.querySelector('select[name="category"]');
+    const skuInput = document.querySelector('input[name="sku"]');
+    const skuHint = document.getElementById('sku-hint');
+    const saveCategoryBtn = document.getElementById('save-category-btn');
+    const categoryNameInput = document.getElementById('new-category-name');
+    const modalErrorMessage = document.getElementById('modal-error-message');
+    const errorText = document.getElementById('error-text');
+    const addCategoryModalEl = document.getElementById('addCategoryModal');
+
+    // ── SKU Auto-generate on Category change (Add page only) ──
+    if (categorySelect && skuInput && isAddPage) {
+        categorySelect.addEventListener('change', function () {
+            const categoryId = categorySelect.value;
+            if (!categoryId) return;
+            if (skuHint) skuHint.textContent = 'Generating SKU…';
+            fetch(`/products/generate-sku/?category_id=${categoryId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        skuInput.value = data.sku;
+                        if (skuHint) skuHint.textContent = 'SKU auto-generated from category. You can edit it if needed.';
+                    }
+                })
+                .catch(() => { if (skuHint) skuHint.textContent = 'Could not generate SKU automatically.'; });
+        });
+    }
+
+    // ── Save Category via AJAX ──
+    if (saveCategoryBtn) {
+        saveCategoryBtn.addEventListener('click', function () {
+            const name = categoryNameInput.value.trim();
+            if (!name) {
+                errorText.textContent = 'Category name cannot be empty.';
+                modalErrorMessage.classList.remove('d-none');
+                return;
+            }
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch('/products/add-category-ajax/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ name })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    categoryNameInput.value = '';
+                    modalErrorMessage.classList.add('d-none');
+                    // Add & select the new option
+                    const opt = new Option(data.name, data.id, true, true);
+                    categorySelect.add(opt);
+                    categorySelect.dispatchEvent(new Event('change'));
+                    bootstrap.Modal.getInstance(addCategoryModalEl).hide();
+                } else {
+                    errorText.textContent = data.message || 'An error occurred.';
+                    modalErrorMessage.classList.remove('d-none');
+                }
+            })
+            .catch(() => {
+                errorText.textContent = 'Failed to save. Please try again.';
+                modalErrorMessage.classList.remove('d-none');
+            });
+        });
+    }
+
+    // ── Clear modal errors when modal is reopened ──
+    if (addCategoryModalEl) {
+        addCategoryModalEl.addEventListener('show.bs.modal', function () {
+            modalErrorMessage.classList.add('d-none');
+            categoryNameInput.value = '';
+        });
+    }
+});
+</script>
 {% endblock %}

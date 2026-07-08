@@ -8,16 +8,18 @@ from django.views.decorators.http import require_POST
 from .models import Product, Category
 from .forms import ProductForm
 
-
 @login_required
 def product_list(request):
-    products = Product.objects.all().order_by('name')
+    if request.user.is_superuser:
+        products = Product.objects.all()
+        is_admin = True
+    else:
+        products = Product.objects.all()
+        is_admin = False
 
-    for product in products:
-        product.display_stock = product.get_display_stock(request.user)
-
-    return render(request, 'inventory/products.html', {
-        'products': products,
+    return render(request, "inventory/products.html", {
+        "products": products,
+        "is_admin": request.user.is_superuser,
     })
 
 
@@ -138,14 +140,22 @@ def generate_sku(request):
 
 @login_required
 def stock_levels(request):
-    """Real-time stock level API used by inventory page JS polling."""
-    is_admin = request.user.is_superuser
-    result = []
-    for p in Product.objects.all().values('id', 'quantity', 'staff_quantity'):
-        qty = p['quantity'] if is_admin else p['staff_quantity']
-        result.append({
-            'id': p['id'],
-            'quantity': qty,
-            'is_low': qty <= 5,
+    products = Product.objects.all()
+
+    data = []
+
+    for p in products:
+        if request.user.is_superuser:
+            qty = p.quantity
+        else:
+            qty = p.staff_quantity
+
+        data.append({
+            "id": p.id,
+            "quantity": qty,
+            "is_low": qty <= 5
         })
-    return JsonResponse({'products': result})
+
+    return JsonResponse({
+        "products": data
+    })

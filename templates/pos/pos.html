@@ -4,8 +4,16 @@
     <!-- Left: Product Search & Selection -->
     <div class="col-md-7">
         <div class="card p-3 shadow-sm mb-3">
-            <input type="text" id="productSearch" class="form-control form-control-lg"
-                placeholder="Search Product by Name or SKU...">
+            <div class="input-group input-group-merge" style="border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden; background-color: #fff; transition: all 0.2s ease;">
+                <span class="input-group-text bg-white border-0 py-2.5 ps-3 text-muted">
+                    <i class="bi bi-search" style="font-size: 1.1rem;"></i>
+                </span>
+                <input type="text" id="productSearch" class="form-control border-0 py-2.5 ps-1"
+                    placeholder="Search product by name " onkeyup="search()" autocomplete="off" style="box-shadow: none; font-size: 0.95rem;">
+                <button class="btn border-0 bg-transparent text-muted py-2.5 pe-3" type="button" id="clearSearch" style="display: none; outline: none; box-shadow: none;">
+                    <i class="bi bi-x-circle-fill" style="font-size: 1.1rem; color: #94a3b8;"></i>
+                </button>
+            </div>
         </div>
         <div class="row g-3" id="productList">
             {% for p in products %}
@@ -24,6 +32,10 @@
                 </div>
             </div>
             {% endfor %}
+            <div id="noResults" class="col-12 text-center py-5 text-muted" style="display: none;">
+                <i class="bi bi-search" style="font-size: 3rem; display: block;" class="mb-3 text-secondary"></i>
+                No products match your search.
+            </div>
         </div>
     </div>
 
@@ -78,6 +90,49 @@
     <script>
         let cart = [];
         // const taxRate = 0.05;
+
+        function search() {
+    const query = document.getElementById('productSearch').value.toLowerCase().trim();
+    const clearBtn = document.getElementById('clearSearch');
+    const cards = document.querySelectorAll('.product-card');
+    const noResults = document.getElementById('noResults');
+
+    if (query.length > 0) {
+        clearBtn.style.display = 'block';
+    } else {
+        clearBtn.style.display = 'none';
+    }
+
+    let visibleCount = 0;
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name') || '';
+        const sku = card.getAttribute('data-sku') || '';
+        if (name.toLowerCase().includes(query) || sku.toLowerCase().includes(query)) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    if (visibleCount === 0 && cards.length > 0) {
+        noResults.style.display = 'block';
+    } else {
+        noResults.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const clearBtn = document.getElementById('clearSearch');
+    const searchInput = document.getElementById('productSearch');
+    if (clearBtn && searchInput) {
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            search();
+            searchInput.focus();
+        });
+    }
+});
 
         function addToCart(id, name, price) {
             let item = cart.find(i => i.id === id);
@@ -221,6 +276,10 @@
         }
     </script>
     <style>
+        .input-group-merge:focus-within {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+    }
         @media print {
 
             /* Hide everything on the page */

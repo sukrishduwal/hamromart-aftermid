@@ -18,7 +18,7 @@ media/
 staticfiles/
 
 # SQLite 
-db.sqlite3
+#*.sqlite3
 
 # IDEs
 .vscode/

@@ -21,15 +21,15 @@
     
     <style>
         :root {
-            --primary: #6366f1; /* Indigo */
+            --primary: #6366f1; 
             --primary-hover: #4f46e5;
             --primary-soft: rgba(99, 102, 241, 0.08);
-            --dark-bg: #0f172a; /* Slate 900 */
-            --sidebar-end: #1e293b; /* Slate 800 */
-            --bg-color: #f8fafc; /* Slate 50 */
-            --border-color: #f1f5f9; /* Slate 100 */
-            --text-main: #334155; /* Slate 700 */
-            --text-muted: #64748b; /* Slate 500 */
+            --dark-bg: #ffb6c1;
+            --sidebar-end: #ffb6c1; 
+            --bg-color: #f8f6f6; 
+            --border-color: #0a0a0a; 
+            --text-main: #334155; 
+            --text-muted: #64748b; 
             --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05), 0 4px 20px -2px rgba(15, 23, 42, 0.05);
             --font-family: 'Plus Jakarta Sans', sans-serif;
         }
@@ -51,7 +51,7 @@
             box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             padding: 12px 30px;
-            position: sticky;
+            position: drop;
             top: 0;
             z-index: 1000;
         }
@@ -61,7 +61,7 @@
             height: auto;
             border-radius: 10px;
             transition: all 0.3s ease;
-            background: #ffffff;
+            background: #181616;
             padding: 3px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
@@ -72,7 +72,7 @@
         }
 
         .nav-link-horizontal {
-            color: #94a3b8 !important;
+            color: #0f172a ;
             text-decoration: none;
             padding: 8px 16px;
             display: inline-flex;
@@ -91,7 +91,6 @@
 
         .nav-link-horizontal:hover {
             background: rgba(255, 255, 255, 0.04);
-            color: #ffffff !important;
         }
 
         .nav-link-horizontal:hover i {
@@ -99,10 +98,9 @@
         }
 
         .nav-link-horizontal.active {
-            background: rgba(99, 102, 241, 0.15);
-            color: #ffffff !important;
+            background: rgba(196, 165, 175, 0.15);
             font-weight: 600;
-            box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.3);
+            box-shadow: inset 0 0 0 1px rgba(234, 216, 76, 0.86);
         }
 
         /* Main Content Styling */
@@ -116,7 +114,7 @@
 
         /* Premium Cards */
         .card-premium {
-            background: #ffffff;
+            background: #c1b8b805;
             border-radius: 16px;
             box-shadow: var(--card-shadow);
             border: 1px solid var(--border-color);

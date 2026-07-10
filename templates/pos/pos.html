@@ -4,13 +4,16 @@
     <!-- Left: Product Search & Selection -->
     <div class="col-md-7">
         <div class="card p-3 shadow-sm mb-3">
-            <div class="input-group input-group-merge" style="border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden; background-color: #fff; transition: all 0.2s ease;">
+            <div class="input-group input-group-merge"
+                style="border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden; background-color: #fff; transition: all 0.2s ease;">
                 <span class="input-group-text bg-white border-0 py-2.5 ps-3 text-muted">
                     <i class="bi bi-search" style="font-size: 1.1rem;"></i>
                 </span>
                 <input type="text" id="productSearch" class="form-control border-0 py-2.5 ps-1"
-                    placeholder="Search product by name " onkeyup="search()" autocomplete="off" style="box-shadow: none; font-size: 0.95rem;">
-                <button class="btn border-0 bg-transparent text-muted py-2.5 pe-3" type="button" id="clearSearch" style="display: none; outline: none; box-shadow: none;">
+                    placeholder="Search product by name " onkeyup="search()" autocomplete="off"
+                    style="box-shadow: none; font-size: 0.95rem;">
+                <button class="btn border-0 bg-transparent text-muted py-2.5 pe-3" type="button" id="clearSearch"
+                    style="display: none; outline: none; box-shadow: none;">
                     <i class="bi bi-x-circle-fill" style="font-size: 1.1rem; color: #94a3b8;"></i>
                 </button>
             </div>
@@ -73,7 +76,7 @@
                 <div class="d-flex justify-content-between"><span>Subtotal</span><span id="subtotal">Rs.0.00</span>
                 </div>
                 <div class="d-flex justify-content-between text-danger"><span>Discount</span><input type="number"
-                        id="discount" value="0" class="form-control form-control-sm w-25 text-end"
+                        id="discount" value="0" min="0" class="form-control form-control-sm w-25 text-end"
                         onchange="updateTotals()"></div>
                 <hr>
                 <div class="d-flex justify-content-between h4 fw-bold"><span>Total</span><span id="total">Rs.0.00</span>
@@ -92,47 +95,47 @@
         // const taxRate = 0.05;
 
         function search() {
-    const query = document.getElementById('productSearch').value.toLowerCase().trim();
-    const clearBtn = document.getElementById('clearSearch');
-    const cards = document.querySelectorAll('.product-card');
-    const noResults = document.getElementById('noResults');
+            const query = document.getElementById('productSearch').value.toLowerCase().trim();
+            const clearBtn = document.getElementById('clearSearch');
+            const cards = document.querySelectorAll('.product-card');
+            const noResults = document.getElementById('noResults');
 
-    if (query.length > 0) {
-        clearBtn.style.display = 'block';
-    } else {
-        clearBtn.style.display = 'none';
-    }
+            if (query.length > 0) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
 
-    let visibleCount = 0;
-    cards.forEach(card => {
-        const name = card.getAttribute('data-name') || '';
-        const sku = card.getAttribute('data-sku') || '';
-        if (name.toLowerCase().includes(query) || sku.toLowerCase().includes(query)) {
-            card.style.display = '';
-            visibleCount++;
-        } else {
-            card.style.display = 'none';
+            let visibleCount = 0;
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name') || '';
+                const sku = card.getAttribute('data-sku') || '';
+                if (name.toLowerCase().includes(query) || sku.toLowerCase().includes(query)) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0 && cards.length > 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
         }
-    });
 
-    if (visibleCount === 0 && cards.length > 0) {
-        noResults.style.display = 'block';
-    } else {
-        noResults.style.display = 'none';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const clearBtn = document.getElementById('clearSearch');
-    const searchInput = document.getElementById('productSearch');
-    if (clearBtn && searchInput) {
-        clearBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            search();
-            searchInput.focus();
+        document.addEventListener('DOMContentLoaded', () => {
+            const clearBtn = document.getElementById('clearSearch');
+            const searchInput = document.getElementById('productSearch');
+            if (clearBtn && searchInput) {
+                clearBtn.addEventListener('click', () => {
+                    searchInput.value = '';
+                    search();
+                    searchInput.focus();
+                });
+            }
         });
-    }
-});
 
         function addToCart(id, name, price) {
             let item = cart.find(i => i.id === id);
@@ -166,12 +169,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function updateTotals() {
             let sub = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-            let disc = parseFloat(document.getElementById("discount").value) || 0;
-            let total = sub - disc;
 
-            if (total < 0) total = 0;
+            // Every full Rs.3000 adds 5% discount
+            let discountPercent = Math.floor(sub / 3000) * 5;
+
+            // Optional: Cap the discount at 100%
+            if (discountPercent > 100) {
+                discountPercent = 100;
+            }
+
+            let discountAmount = sub * (discountPercent / 100);
+            let total = sub - discountAmount;
 
             document.getElementById("subtotal").innerText = `Rs.${sub.toFixed(2)}`;
+            document.getElementById("discount").value = discountAmount.toFixed(2);
             document.getElementById("total").innerText = `Rs.${total.toFixed(2)}`;
         }
 
@@ -220,19 +231,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById("btnCheckout").disabled = true;
                 printReceipt();
             } else {
-                    let errorMessage = "Error processing transaction.";
-                    try {
-                        const result = await response.json();
-                        if (result && result.message) {
-                            errorMessage = result.message;
-                        }
-                    } catch (error) {
-                        const fallback = await response.text();
-                        if (fallback) {
-                            errorMessage = fallback;
-                        }
+                let errorMessage = "Error processing transaction.";
+                try {
+                    const result = await response.json();
+                    if (result && result.message) {
+                        errorMessage = result.message;
                     }
-                    alert(errorMessage);
+                } catch (error) {
+                    const fallback = await response.text();
+                    if (fallback) {
+                        errorMessage = fallback;
+                    }
+                }
+                alert(errorMessage);
             }
         }
 
@@ -247,20 +258,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear cart
             cart = [];
 
-                // Clear customer information
+            // Clear customer information
             document.getElementById("custPhone").value = "";
             document.getElementById("custName").value = "";
 
-                // Reset discount
+            // Reset discount
             document.getElementById("discount").value = 0;
 
-                // Refresh cart and totals
+            // Refresh cart and totals
             renderCart();
 
-                // Enable Checkout
+            // Enable Checkout
             document.getElementById("btnCheckout").disabled = false;
 
-                // Clear receipt values
+            // Clear receipt values
             document.getElementById("r-date").innerText = "";
             document.getElementById("r-cust").innerText = "";
             document.getElementById("r-items").innerHTML = "";
@@ -268,18 +279,19 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById("r-disc").innerText = "Rs.0.00";
             document.getElementById("r-total").innerText = "Rs.0.00";
 
-                updateTotals();
+            updateTotals();
         }
         function removeItem(index) {
-                cart.splice(index, 1);
-                renderCart();
+            cart.splice(index, 1);
+            renderCart();
         }
     </script>
     <style>
         .input-group-merge:focus-within {
-        border-color: var(--primary) !important;
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
-    }
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+        }
+
         @media print {
 
             /* Hide everything on the page */

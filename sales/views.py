@@ -22,7 +22,7 @@ def is_valid_phone_number(phone):
 @login_required
 def pos_view(request):
     # Both admin and staff can access POS
-    if not (request.user.is_superuser or request.user.groups.filter(name='Cashier').exists()):
+    if not ( request.user.groups.filter(name='Cashier').exists()):
         raise PermissionDenied("You do not have permission to access the POS.")
     # Staff only sees products with remaining staff_quantity
     is_admin = request.user.is_superuser

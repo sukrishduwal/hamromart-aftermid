@@ -21,15 +21,15 @@
     
     <style>
         :root {
-            --primary: #6366f1; 
+            --primary: #6366f1; /* Indigo */
             --primary-hover: #4f46e5;
             --primary-soft: rgba(99, 102, 241, 0.08);
-            --dark-bg: #ffb6c1;
-            --sidebar-end: #ffb6c1; 
-            --bg-color: #f8f6f6; 
-            --border-color: #0a0a0a; 
-            --text-main: #334155; 
-            --text-muted: #64748b; 
+            --dark-bg: #ffb6c1; /* Slate 900 */
+            --sidebar-end: #ffb6c1; /* Slate 800 */
+            --bg-color: #f8fafc; /* Slate 50 */
+            --border-color: #0a0a0a; /* Slate 100 */
+            --text-main: #334155; /* Slate 700 */
+            --text-muted: #64748b; /* Slate 500 */
             --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05), 0 4px 20px -2px rgba(15, 23, 42, 0.05);
             --font-family: 'Plus Jakarta Sans', sans-serif;
         }
@@ -51,7 +51,7 @@
             box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             padding: 12px 30px;
-            position: drop;
+            position: sticky;
             top: 0;
             z-index: 1000;
         }
@@ -61,7 +61,7 @@
             height: auto;
             border-radius: 10px;
             transition: all 0.3s ease;
-            background: #181616;
+            background: #ffffff;
             padding: 3px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
@@ -72,7 +72,7 @@
         }
 
         .nav-link-horizontal {
-            color: #0f172a ;
+            color: #0f172a !important;
             text-decoration: none;
             padding: 8px 16px;
             display: inline-flex;
@@ -98,7 +98,7 @@
         }
 
         .nav-link-horizontal.active {
-            background: rgba(196, 165, 175, 0.15);
+            background: rgba(99, 102, 241, 0.15);
             font-weight: 600;
             box-shadow: inset 0 0 0 1px rgba(234, 216, 76, 0.86);
         }
@@ -114,7 +114,7 @@
 
         /* Premium Cards */
         .card-premium {
-            background: #c1b8b805;
+            background: #ffffff;
             border-radius: 16px;
             box-shadow: var(--card-shadow);
             border: 1px solid var(--border-color);
@@ -221,12 +221,14 @@
                 </a>
                 
                 {% if not user.is_superuser %}
-    <a href="{% url 'pos_view' %}"
-       class="nav-link-horizontal {% if url_name == 'pos_view' %}active{% endif %}">
-        <i class="bi bi-cash-coin me-2"></i> POS
-    </a>
-{% endif %}
-                <endif>
+                <a href="{% url 'pos_view' %}" class="nav-link-horizontal {% if url_name == 'pos_view' %}active{% endif %}">
+                    <i class="bi bi-cash-coin me-2"></i> POS
+                </a>
+
+                <a href="{% url 'customer_history' %}" class="nav-link-horizontal {% if url_name == 'customer_history' %}active{% endif %}">
+                    <i class="bi bi-clock-history me-2"></i> Customer History
+                </a>
+                {% endif %}
                 {% if user.is_superuser %}
                 <a href="{% url 'sales_report' %}" class="nav-link-horizontal {% if url_name == 'sales_report' or url_name == 'receipt_detail' %}active{% endif %}">
                     <i class="bi bi-bar-chart-line-fill me-2"></i> Reports

@@ -39,14 +39,23 @@ def pos_view(request):
 
 @login_required
 def get_customer_history(request):
-    phone = request.GET.get('phone')
+    phone = (request.GET.get('phone') or '').strip()
     try:
         customer = Customer.objects.get(phone=phone)
-        sales = Sale.objects.filter(customer=customer).order_by('-timestamp')[:3]
-        history = [{"date": s.timestamp.strftime("%Y-%m-%d"), "total": float(s.total)} for s in sales]
+        sales = Sale.objects.filter(customer=customer).order_by('-timestamp')[:10]
+        history = [{
+            "id": s.id,
+            "date": s.timestamp.strftime("%Y-%m-%d"),
+            "total": float(s.total),
+            "bill_no": s.bill_no,
+        } for s in sales]
         return JsonResponse({"status": "success", "name": customer.name, "history": history})
     except Customer.DoesNotExist:
         return JsonResponse({"status": "not_found"})
+    
+@login_required
+def customer_history_view(request):
+    return render(request, 'pos/customer_history.html')
 
 
 @login_required
@@ -114,7 +123,7 @@ def process_sale(request):
 
 @login_required
 def receipt_detail(request, pk):
-    if not request.user.is_superuser:
-        raise PermissionDenied("Only administrators are allowed to view receipt details.")
+    if not (request.user.is_superuser or request.user.groups.filter(name='Cashier').exists()):
+        raise PermissionDenied("Only administrators and cashiers are allowed to view receipt details.")
     sale = get_object_or_404(Sale, pk=pk)
     return render(request, 'receipt/receipt_detail.html', {'sale': sale})

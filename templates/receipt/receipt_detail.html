@@ -45,12 +45,40 @@
         <div class="text-center small text-muted">Thank you for your purchase!</div>
 
         <div class="d-print-none mt-4 text-center">
-            <button onclick="window.print()" class="btn btn-primary btn-sm w-100 mb-2">Print Copy</button>
+            <button class="btn btn-primary w-100 btn-lg" id="btnCheckout" onclick="checkout()">
+                <i class="bi bi-credit-card me-2"></i>Print Receipt
+            </button>
             <a href="{% url 'sales_report' %}" class="btn btn-link btn-sm text-muted">Back to Reports</a>
-        </div>
-    </div>
-</div>
 
+        </div> 
+         
+    </div>
+</div> 
+{% comment %} <script>
+    async function checkout() {
+        try {
+            const response = await fetch("{% url 'checkout' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/json"
+                }
+            });
+
+        if (!response.ok) {
+            throw new Error("failed");
+        }
+
+        elif{
+        window.print();
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    }
+    }
+</script> {% endcomment %}
 <style>
     @media print {
         body * {

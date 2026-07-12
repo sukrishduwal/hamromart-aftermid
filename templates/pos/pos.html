@@ -17,7 +17,7 @@
         </div>
         <div class="row g-3" id="productList">
             {% for p in products %}
-            <div class="col-md-4 product-card" data-name="{{ p.name }}" data-sku="{{ p.sku }}">
+            <div class="col-md-4 product-card" id="product-{{ p.id }}" data-name="{{ p.name }}"data-sku="{{ p.sku }}">
                 <div class="card h-100 shadow-sm border-0 text-center p-2"
                     onclick="addToCart('{{ p.id }}', '{{ p.name }}','{{ p.selling_price }}')">
                     {% if p.image %}
@@ -27,7 +27,9 @@
                     <div class="card-body p-2">
                         <h6 class="mb-1">{{ p.name }}</h6>
                         <span class="text-primary fw-bold">Rs.{{ p.selling_price }}</span><br>
-                        <small class="text-muted">Stock: {{ p.staff_quantity }}</small>
+                        <small class="text-muted">Stock: 
+                            <span class="stock">{{ p.staff_quantity }}</span>
+                        </small>
                     </div>
                 </div>
             </div>
@@ -198,24 +200,44 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.ok) {
-                // --- FILL RECEIPT DATA FOR PRINTING ---
-                document.getElementById('r-date').innerText = new Date().toLocaleString();
-                document.getElementById('r-cust').innerText = data.name + " (" + data.phone + ")";
-                document.getElementById('r-total').innerText = `Rs.${data.total.toFixed(2)}`;
+                const result = await response.json();
+                
+                result.updated_products.forEach(product => {
 
-                // FIX: Ensure multiple quantity is shown on receipt
-                document.getElementById('r-items').innerHTML = cart.map(item => `
-            <tr>
-                <td style="padding: 5px 0;">
-                    ${item.name}<br>
-                    <small>${item.qty} x Rs.${item.price.toFixed(2)}</small>
-                </td>
-                <td style="text-align: right;">Rs.${(item.price * item.qty).toFixed(2)}</td>
-            </tr>
-        `).join('');
+                const card = document.getElementById(`product-${product.id}`);
 
+                if (!card) return;
+
+                    const stock = card.querySelector(".stock");
+
+                    stock.innerText = product.staff_quantity;
+
+                if (product.staff_quantity <= 0) {
+                    card.style.display = "none";
+                } 
+
+                });
+                // Fill receipt data
+                document.getElementById("r-bill").innerText = result.bill_no;
+                document.getElementById("r-date").innerText = new Date().toLocaleString();
+                document.getElementById("r-cust").innerText = `${data.name} (${data.phone})`;
+
+                document.getElementById("r-items").innerHTML = cart.map(item => `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td style="text-align:center;">${item.qty}</td>
+                        <td style="text-align:right;">Rs.${(item.price * item.qty).toFixed(2)}</td>
+                    </tr>
+                    `).join('');
+
+                document.getElementById("r-sub").innerText =
+                    `Rs.${data.subtotal.toFixed(2)}`;
+                document.getElementById("r-disc").innerText =
+                    `Rs.${data.discount.toFixed(2)}`;
+                document.getElementById("r-total").innerText =
+                    `Rs.${data.total.toFixed(2)}`;
                 alert("Checkout completed successfully.");
-
+                
                 // Disable Checkout to prevent duplicate submissions
                 document.getElementById("btnCheckout").disabled = true;
                 printReceipt();
@@ -236,40 +258,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        function printReceipt() {
-            window.addEventListener("afterprint", resetPOS, { once: true });
+       function printReceipt() {
+
             window.print();
 
+            resetPOS();
+
+            document.getElementById("btnCheckout").disabled = false;
         }
 
         function resetPOS() {
 
-            // Clear cart
             cart = [];
 
-                // Clear customer information
-            document.getElementById("custPhone").value = "";
-            document.getElementById("custName").value = "";
-
-                // Reset discount
-            document.getElementById("discount").value = 0;
-
-                // Refresh cart and totals
             renderCart();
 
-                // Enable Checkout
-            document.getElementById("btnCheckout").disabled = false;
+            document.getElementById("custPhone").value = "";
+            document.getElementById("custName").value = "";
+            document.getElementById("discount").value = 0;
 
-                // Clear receipt values
+            document.getElementById("r-bill").innerText = "";
             document.getElementById("r-date").innerText = "";
             document.getElementById("r-cust").innerText = "";
             document.getElementById("r-items").innerHTML = "";
-            document.getElementById("r-sub").innerText = "Rs.0.00";
-            document.getElementById("r-disc").innerText = "Rs.0.00";
-            document.getElementById("r-total").innerText = "Rs.0.00";
+            document.getElementById("r-sub").innerText = "";
+            document.getElementById("r-disc").innerText = "";
+            document.getElementById("r-total").innerText = "";
 
-                updateTotals();
+            updateTotals();
+
+        document.getElementById("btnCheckout").disabled = false;
         }
+        
         function removeItem(index) {
                 cart.splice(index, 1);
                 renderCart();
@@ -282,26 +302,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
         @media print {
 
-            /* Hide everything on the page */
             body * {
                 visibility: hidden;
             }
 
-            /* Show ONLY the receipt-print div and its children */
             #receipt-print,
-            #receipt-print * {
+             #receipt-print * {
                 visibility: visible;
             }
 
-            /* Position the receipt at the very top-left of the paper */
             #receipt-print {
+                display: block !important;
                 position: absolute;
-                left: 0;
                 top: 0;
-                width: 100%;
+                left: 0;
+                width: 80mm;
+                background: white;
+                padding: 5px;
             }
 
-            /* Hide the sidebar and navbars entirely from the layout engine */
             .sidebar,
             .navbar,
             .btn,
@@ -312,26 +331,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     </style>
     <!-- Hidden Receipt Area (Only shows when printing) -->
-    <div id="receipt-print" class="d-print-block" style="width: 80mm; font-family: monospace; display: none;">
-        <div class="text-center">
-            <h4>HAMRO MART</h4>
-            <p>BHAKTAPUR, NEPAL<br>Tel: +123456789</p>
+    <div id="receipt-print" style="width:80mm;font-family:monospace;">
+
+        <div style="text-align:center;">
+            <h4 style="margin:0;">HAMRO MART</h4>
+            <div>VAT BILL</div>
+            <div>Bhaktapur, Nepal</div>
+
+            <div style="display:flex;justify-content:space-between;font-size:12px;">
+                <span>VAT No: 123456789</span>
+                <span>Phone: 98xxxxxxxx</span>
+            </div>
         </div>
+    
+
         <hr>
-        <p>Date: <span id="r-date"></span><br>Customer: <span id="r-cust"></span></p>
-        <hr>
-        <table class="w-100">
+
+        <div style="display:flex;justify-content:space-between;font-size:12px;">
+            <span><b>Bill No:</b> <span id="r-bill"></span></span>
+            <span><b>Date:</b> <span id="r-date"></span></span>
+        </div>
+
+        <div style="font-size:12px;">
+            <b>Customer:</b>
+            <span id="r-cust"></span>
+        </div>
+
+     <hr>
+
+        <table style="width:100%;font-size:12px;">
+            <thead>
+                <tr>
+                    <th align="left">Item</th>
+                    <th align="center">Qty</th>
+                    <th align="right">Price</th>
+                </tr>
+            </thead>
             <tbody id="r-items"></tbody>
         </table>
+
         <hr>
-        <div class="d-flex justify-content-between"><span>Subtotal:</span><span id="r-sub">Rs.{{sale.subtotal}}</span>
+
+        <div style="display:flex;justify-content:space-between;">
+            <span>Subtotal</span>
+            <span id="r-sub"></span>
         </div>
-        <!-- <div class="d-flex justify-content-between"><span>Tax (5%):</span><span id="r-tax">Rs.{{sale.tax}}</span></div> -->
-        <div class="d-flex justify-content-between"><span>Discount:</span><span id="r-disc">Rs.{{sale.discount}}</span>
+
+        <div style="display:flex;justify-content:space-between;">
+            <span>Discount</span>
+            <span id="r-disc"></span> 
         </div>
-        <div class="h5 d-flex justify-content-between fw-bold"><span>TOTAL:</span><span
-                id="r-total">Rs.{{sale.total}}</span></div>
+
+        <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px;">
+            <span>TOTAL</span>
+            <span id="r-total"></span>
+        </div>
+
         <hr>
-        <p class="text-center">Thank you for shopping!</p>
+
+        <div style="text-align:center;font-size:12px;">
+            Thank you for your purchase!
+        </div>
+
+        <div class="d-print-none mt-4 text-center">
+            <button onclick="window.print()" class="btn btn-primary btn-sm w-100 mb-2">Print Copy</button>
+                <a href="{% url 'sales_report' %}" class="btn btn-link btn-sm text-muted">Back to Reports</a>
+        </div>
+        </div>
     </div>
-    {% endblock %}
+{% endblock %}

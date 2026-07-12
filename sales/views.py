@@ -77,6 +77,8 @@ def process_sale(request):
 
             is_admin = request.user.is_superuser
 
+            updated_products = []
+
             for item in data['cart']:
                 product = Product.objects.get(id=item['id'])
                 qty_sold = int(item['qty'])
@@ -100,6 +102,12 @@ def process_sale(request):
 
                 product.save()
 
+                updated_products.append({
+                    "id": product.id,
+                    "quantity": product.quantity,
+                    "staff_quantity": product.staff_quantity,
+                })
+
                 # Auto-restore staff pool if running low and master stock available
                 if (product.staff_quantity <= STAFF_LOW_THRESHOLD and
                         product.quantity > product.staff_quantity):
@@ -107,6 +115,7 @@ def process_sale(request):
                     product.staff_quantity = restore_to
                     product.save()
 
+            return JsonResponse({"status": "success","bill_no": sale.bill_no,"updated_products": updated_products,})
             return JsonResponse({"status": "success", "sale_id": sale.id, "bill_no": sale.bill_no})
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=400)
@@ -118,3 +127,4 @@ def receipt_detail(request, pk):
         raise PermissionDenied("Only administrators are allowed to view receipt details.")
     sale = get_object_or_404(Sale, pk=pk)
     return render(request, 'receipt/receipt_detail.html', {'sale': sale})
+    return JsonResponse ({"success": true,"bill_no": sale.bill_no})

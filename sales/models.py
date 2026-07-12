@@ -74,3 +74,29 @@ class SaleItem(models.Model):
 
     class Meta:
         db_table = 'inventory_saleitem'
+
+class DiscountScheme(models.Model):
+    min_purchase = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=3000
+    )
+
+    step_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=3000
+    )
+
+    step_discount = models.PositiveIntegerField(
+        default=5
+    )
+
+    max_discount = models.PositiveIntegerField(
+        default=25
+    )
+
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return "Discount Scheme"

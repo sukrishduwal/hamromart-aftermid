@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -26,7 +27,7 @@ def sales_report(request):
         total_spent=Sum('sale__total'),
         order_count=Count('sale')
     )
-
+    
     context = {
         'revenue': total_revenue,
         'orders': total_orders,
@@ -37,3 +38,9 @@ def sales_report(request):
         'purchase_history': purchase_history,
     }
     return render(request, 'reports/sales_report.html', context)
+
+def checkout(request):
+    if request.method == 'POST':
+        # window.print()
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'})

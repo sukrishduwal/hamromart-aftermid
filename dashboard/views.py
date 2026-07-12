@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.db.models.functions import TruncDay
 from datetime import timedelta
 from products.models import Product
-from sales.models import Sale, SaleItem
+from sales.models import Sale, SaleItem, DiscountScheme
 
 @login_required
 def admin_dashboard(request):
@@ -50,3 +50,18 @@ def admin_dashboard(request):
         'top_categories': top_categories,
     }
     return render(request, 'dashboard/dashboard.html', context)
+def discount_settings(request):
+    scheme, created = DiscountScheme.objects.get_or_create(id=1)
+
+    if request.method == "POST":
+        scheme.min_purchase = request.POST.get("min_purchase")
+        scheme.step_amount = request.POST.get("step_amount")
+        scheme.step_discount = request.POST.get("step_discount")
+        scheme.max_discount = request.POST.get("max_discount")
+        scheme.save()
+
+        return redirect("discount_settings")
+
+    return render(request, "dashboard/discount_settings.html", {
+        "scheme": scheme
+    })

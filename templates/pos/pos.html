@@ -20,7 +20,7 @@
         </div>
         <div class="row g-3" id="productList">
             {% for p in products %}
-            <div class="col-md-4 product-card" data-name="{{ p.name }}" data-sku="{{ p.sku }}">
+            <div class="col-md-4 product-card" id="product-{{ p.id }}" data-name="{{ p.name }}" data-sku="{{ p.sku }}">
                 <div class="card h-100 shadow-sm border-0 text-center p-2"
                     onclick="addToCart('{{ p.id }}', '{{ p.name }}','{{ p.selling_price }}', '{{ p.staff_quantity }}')">
                     {% if p.image %}
@@ -30,7 +30,9 @@
                     <div class="card-body p-2">
                         <h6 class="mb-1">{{ p.name }}</h6>
                         <span class="text-primary fw-bold">Rs.{{ p.selling_price }}</span><br>
-                        <small class="text-muted">Stock: {{ p.staff_quantity }}</small>
+                        <small class="text-muted">Stock: 
+                            <span class="stock">{{ p.staff_quantity }}</span>
+                        </small>
                     </div>
                 </div>
             </div>
@@ -345,26 +347,25 @@ document.getElementById('r-bill').innerText = `#${result.bill_no}`;
 
         @media print {
 
-            /* Hide everything on the page */
             body * {
                 visibility: hidden;
             }
 
-            /* Show ONLY the receipt-print div and its children */
             #receipt-print,
-            #receipt-print * {
+             #receipt-print * {
                 visibility: visible;
             }
 
-            /* Position the receipt at the very top-left of the paper */
             #receipt-print {
+                display: block !important;
                 position: absolute;
-                left: 0;
                 top: 0;
-                width: 100%;
+                left: 0;
+                width: 80mm;
+                background: white;
+                padding: 5px;
             }
 
-            /* Hide the sidebar and navbars entirely from the layout engine */
             .sidebar,
             .navbar,
             .btn,
@@ -385,6 +386,8 @@ document.getElementById('r-bill').innerText = `#${result.bill_no}`;
                 <small class="text-muted">Phone: 98xxxxxxxx</small>
             </div>
         </div>
+    
+
         <hr>
         <div class="d-flex justify-content-between small">
             <span><strong>Bill No:</strong> <span id="r-bill">#</span></span>
@@ -412,6 +415,4 @@ document.getElementById('r-bill').innerText = `#${result.bill_no}`;
         <hr>
         <div class="text-center small text-muted">Thank you for your purchase!</div>
     </div>
-
-
-    {% endblock %}
+{% endblock %}

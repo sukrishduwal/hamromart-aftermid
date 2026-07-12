@@ -6,8 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from products.models import Product
 from customers.models import Customer
-from .models import Sale, SaleItem
-
+from .models import Sale, SaleItem,DiscountScheme
 PHONE_NUMBER_RE = re.compile(r'^(97|98)\d{8}$')
 
 STAFF_POOL_MAX = 25   # max units visible to staff at once
@@ -29,13 +28,15 @@ def pos_view(request):
         products = Product.objects.filter(quantity__gt=0).order_by('name')
     else:
         products = Product.objects.filter(staff_quantity__gt=0).order_by('name')
+    scheme=DiscountScheme.objects.filter(is_active=True).first()
     return render(request, 'pos/pos.html', {
         'products': products,
         'is_admin': is_admin,
         'staff_low_threshold': STAFF_LOW_THRESHOLD,
+        'scheme': scheme,
     })
 
-
+    
 @login_required
 def get_customer_history(request):
     phone = (request.GET.get('phone') or '').strip()
@@ -88,6 +89,8 @@ def process_sale(request):
 
             is_admin = request.user.is_superuser
 
+            updated_products = []
+
             for item in data['cart']:
                 product = Product.objects.get(id=item['id'])
                 qty_sold = int(item['qty'])
@@ -127,6 +130,12 @@ def process_sale(request):
 
                 product.save()
 
+                updated_products.append({
+                    "id": product.id,
+                    "quantity": product.quantity,
+                    "staff_quantity": product.staff_quantity,
+                })
+
                 # Auto-restore staff pool if running low and master stock available
                 if (
                     product.staff_quantity <= STAFF_LOW_THRESHOLD
@@ -154,3 +163,4 @@ def receipt_detail(request, pk):
         raise PermissionDenied("Only administrators and cashiers are allowed to view receipt details.")
     sale = get_object_or_404(Sale, pk=pk)
     return render(request, 'receipt/receipt_detail.html', {'sale': sale})
+    return JsonResponse ({"success": true,"bill_no": sale.bill_no})

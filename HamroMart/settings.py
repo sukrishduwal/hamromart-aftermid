@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     # Custom Apps
-    'accounts',
+    'accounts.apps.AccountsConfig',
     'dashboard',
     'inventory',
     'products',
@@ -146,5 +146,8 @@ ALLOWED_HOSTS = ['*']
 # runserver 0.0.0.0:8000
 # http://192.168.1.84:8000/
 
+# Session settings
+
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 3600   # 1 hour

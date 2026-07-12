@@ -10,16 +10,20 @@ from .forms import ProductForm
 
 @login_required
 def product_list(request):
-    if request.user.is_superuser:
-        products = Product.objects.all()
-        is_admin = True
-    else:
-        products = Product.objects.all()
-        is_admin = False
+    products = Product.objects.all()
+    categories = Category.objects.all()
+    
+    query = request.GET.get('q', '')
+    selected_category = request.GET.get('categories', '')
+    selected_stock = request.GET.get('stock', '')
 
     return render(request, "inventory/products.html", {
         "products": products,
+        "categories": categories,
         "is_admin": request.user.is_superuser,
+        "query": query,
+        "selected_category": int(selected_category) if selected_category.isdigit() else '',
+        "selected_stock": selected_stock,
     })
 
 

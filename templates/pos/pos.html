@@ -22,7 +22,7 @@
             {% for p in products %}
             <div class="col-md-4 product-card" data-name="{{ p.name }}" data-sku="{{ p.sku }}">
                 <div class="card h-100 shadow-sm border-0 text-center p-2"
-                    onclick="addToCart('{{ p.id }}', '{{ p.name }}','{{ p.selling_price }}')">
+                    onclick="addToCart('{{ p.id }}', '{{ p.name }}','{{ p.selling_price }}', '{{ p.staff_quantity }}')">
                     {% if p.image %}
                     <img src="{{ p.image.url }}" class="card-img-top rounded mx-auto"
                         style="height: 100px; width: 100px; object-fit: cover;">
@@ -73,11 +73,24 @@
             </div>
 
             <div class="border-top pt-3">
-                <div class="d-flex justify-content-between"><span>Subtotal</span><span id="subtotal">Rs.0.00</span>
-                </div>
-                <div class="d-flex justify-content-between text-danger"><span>Discount</span><input type="number"
+                <div class="d-flex justify-content-between mb-2"><span>Subtotal</span><span id="subtotal">Rs.0.00</span></div>
+                <div class="d-flex justify-content-between text-danger mb-3"><span>Discount</span><input type="number"
                         id="discount" value="0" min="0" class="form-control form-control-sm w-25 text-end"
                         onchange="updateTotals()"></div>
+                
+                <!-- Payment Method Toggle -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted mb-2">PAYMENT METHOD</label>
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <input type="radio" class="btn-check" name="payment_method" id="payCash" value="Cash" checked>
+                            <label class="btn btn-outline-secondary w-100 py-2.5 d-flex align-items-center justify-content-center gap-2 payment-cash-label" for="payCash" style="border-radius: 10px; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;">
+                                <i class="bi bi-cash-stack" style="font-size: 1.1rem;"></i> Cash
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <hr>
                 <div class="d-flex justify-content-between h4 fw-bold"><span>Total</span><span id="total">Rs.0.00</span>
                 </div>
@@ -137,25 +150,35 @@
             }
         });
 
-        function addToCart(id, name, price) {
+        function addToCart(id, name, price, staff_quantity) {
             let item = cart.find(i => i.id === id);
             if (item) {
-                item.qty++;
+                if (item.qty >= staff_quantity) {
+                    alert(`Cannot add more than available stock (${staff_quantity}) for ${name}.`);
+                } else {
+                    item.qty += 1;
+                }
             } else {
-                cart.push({ id, name, price: parseFloat(price), qty: 1 });
+                cart.push({ id, name, price: parseFloat(price), qty: 1, staff_quantity: parseInt(staff_quantity) });
             }
             renderCart();
         }
 
         function updateQty(index, newQty) {
-            if (newQty < 1) return removeItem(index);
-            cart[index].qty = parseInt(newQty);
+            newQty = parseInt(newQty);
+            if (newQty < 1) {
+                return removeItem(index);
+            }
+            if (newQty > cart[index].staff_quantity) {
+                alert(`Only ${cart[index].staff_quantity} units of ${cart[index].name} are available in stock.`);
+                newQty = cart[index].staff_quantity;
+            }
+            cart[index].qty = newQty;
             renderCart();
         }
 
         function renderCart() {
             const tbody = document.querySelector('#cartTable tbody');
-            // FIX: Calculate total per row correctly (price * qty)
             tbody.innerHTML = cart.map((item, index) => `
         <tr>
             <td>${item.name}</td>
@@ -173,7 +196,7 @@
             // Every full Rs.3000 adds 5% discount
             let discountPercent = Math.floor(sub / 3000) * 5;
 
-            // Optional: Cap the discount at 100%
+            // Cap the discount at 100%
             if (discountPercent > 100) {
                 discountPercent = 100;
             }
@@ -187,100 +210,118 @@
         }
 
         async function checkout() {
+            for (const item of cart) {
+                if (item.qty > item.staff_quantity) {
+                    alert(`${item.name} has only ${item.staff_quantity} items available.`);
+                    return;
+                }
+            }
+
             const phone = document.getElementById('custPhone').value.trim();
             if (!/^(97|98)\d{8}$/.test(phone)) {
                 return alert("Phone number must be exactly 10 digits and start with 97 or 98.");
             }
             if (cart.length === 0) return alert("Cart is empty");
 
+            const btnCheckout = document.getElementById("btnCheckout");
+            if (btnCheckout) btnCheckout.disabled = true;
+
+            const name = document.getElementById('custName').value || "Walk-in Customer";
+            const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('Rs.', ''));
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+            const total = parseFloat(document.getElementById('total').innerText.replace('Rs.', ''));
+
             const data = {
                 phone: phone,
-                name: document.getElementById('custName').value || "Walk-in Customer",
-                subtotal: parseFloat(document.getElementById('subtotal').innerText.replace('Rs.', '')),
-                discount: parseFloat(document.getElementById('discount').value) || 0,
-                total: parseFloat(document.getElementById('total').innerText.replace('Rs.', '')),
+                name: name,
+                subtotal: subtotal,
+                discount: discount,
+                total: total,
                 cart: cart
             };
 
-            const response = await fetch('/pos/checkout/', {
-                method: 'POST',
-                headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+            try {
+                const response = await fetch('/pos/checkout/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
 
-            if (response.ok) {
-                // --- FILL RECEIPT DATA FOR PRINTING ---
-                document.getElementById('r-date').innerText = new Date().toLocaleString();
-                document.getElementById('r-cust').innerText = data.name + " (" + data.phone + ")";
-                document.getElementById('r-total').innerText = `Rs.${data.total.toFixed(2)}`;
-
-                // FIX: Ensure multiple quantity is shown on receipt
-                document.getElementById('r-items').innerHTML = cart.map(item => `
-            <tr>
-                <td style="padding: 5px 0;">
-                    ${item.name}<br>
-                    <small>${item.qty} x Rs.${item.price.toFixed(2)}</small>
-                </td>
-                <td style="text-align: right;">Rs.${(item.price * item.qty).toFixed(2)}</td>
-            </tr>
-        `).join('');
-
-                alert("Checkout completed successfully.");
-
-                // Disable Checkout to prevent duplicate submissions
-                document.getElementById("btnCheckout").disabled = true;
-                printReceipt();
-            } else {
-                let errorMessage = "Error processing transaction.";
-                try {
+                if (response.ok) {
                     const result = await response.json();
-                    if (result && result.message) {
-                        errorMessage = result.message;
+                    
+                    document.getElementById('r-date').innerText = new Date().toLocaleString();
+                    document.getElementById('r-cust').innerText = name + " (" + phone + ")";
+                    
+                    document.getElementById('r-sub').innerText = `Rs.${subtotal.toFixed(2)}`;
+                    document.getElementById('r-disc').innerText = `Rs.${discount.toFixed(2)}`;
+                    document.getElementById('r-total').innerText = `Rs.${total.toFixed(2)}`;
+                    
+                    document.getElementById('r-method').innerText = 'Cash';
+                    document.getElementById('r-txn-row').style.display = 'none';
+
+                    document.getElementById('r-items').innerHTML = cart.map(item => `
+                        <tr>
+                            <td style="padding: 5px 0;">
+                                ${item.name}<br>
+                                <small>${item.qty} x Rs.${item.price.toFixed(2)}</small>
+                            </td>
+                            <td style="text-align: right;">Rs.${(item.price * item.qty).toFixed(2)}</td>
+                        </tr>
+                    `).join('');
+
+                    alert(`Checkout completed successfully.`);
+                    printReceipt();
+                } else {
+                    let errorMessage = "Error processing transaction.";
+                    try {
+                        const result = await response.json();
+                        if (result && result.message) {
+                            errorMessage = result.message;
+                        }
+                    } catch (error) {
+                        const fallback = await response.text();
+                        if (fallback) {
+                            errorMessage = fallback;
+                        }
                     }
-                } catch (error) {
-                    const fallback = await response.text();
-                    if (fallback) {
-                        errorMessage = fallback;
-                    }
+                    alert(errorMessage);
+                    if (btnCheckout) btnCheckout.disabled = false;
                 }
-                alert(errorMessage);
+            } catch (err) {
+                alert("Connection error: " + err.message);
+                if (btnCheckout) btnCheckout.disabled = false;
             }
         }
 
         function printReceipt() {
             window.addEventListener("afterprint", resetPOS, { once: true });
             window.print();
-
         }
 
         function resetPOS() {
-
-            // Clear cart
             cart = [];
-
-            // Clear customer information
             document.getElementById("custPhone").value = "";
             document.getElementById("custName").value = "";
-
-            // Reset discount
             document.getElementById("discount").value = 0;
 
-            // Refresh cart and totals
             renderCart();
 
-            // Enable Checkout
             document.getElementById("btnCheckout").disabled = false;
 
-            // Clear receipt values
             document.getElementById("r-date").innerText = "";
             document.getElementById("r-cust").innerText = "";
             document.getElementById("r-items").innerHTML = "";
             document.getElementById("r-sub").innerText = "Rs.0.00";
             document.getElementById("r-disc").innerText = "Rs.0.00";
             document.getElementById("r-total").innerText = "Rs.0.00";
+            document.getElementById("r-method").innerText = "Cash";
+            document.getElementById("r-txn").innerText = "";
+            document.getElementById("r-txn-row").style.display = "none";
 
             updateTotals();
         }
+
         function removeItem(index) {
             cart.splice(index, 1);
             renderCart();
@@ -290,6 +331,13 @@
         .input-group-merge:focus-within {
             border-color: var(--primary) !important;
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+        }
+
+        .btn-check:checked + .payment-cash-label {
+            background-color: #0f172a !important;
+            border-color: #0f172a !important;
+            color: #fff !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
         }
 
         @media print {
@@ -336,14 +384,14 @@
             <tbody id="r-items"></tbody>
         </table>
         <hr>
-        <div class="d-flex justify-content-between"><span>Subtotal:</span><span id="r-sub">Rs.{{sale.subtotal}}</span>
-        </div>
-        <!-- <div class="d-flex justify-content-between"><span>Tax (5%):</span><span id="r-tax">Rs.{{sale.tax}}</span></div> -->
-        <div class="d-flex justify-content-between"><span>Discount:</span><span id="r-disc">Rs.{{sale.discount}}</span>
-        </div>
-        <div class="h5 d-flex justify-content-between fw-bold"><span>TOTAL:</span><span
-                id="r-total">Rs.{{sale.total}}</span></div>
+        <div class="d-flex justify-content-between"><span>Subtotal:</span><span id="r-sub">Rs.0.00</span></div>
+        <div class="d-flex justify-content-between"><span>Discount:</span><span id="r-disc">Rs.0.00</span></div>
+        <div class="h5 d-flex justify-content-between fw-bold"><span>TOTAL:</span><span id="r-total">Rs.0.00</span></div>
+        <div class="d-flex justify-content-between"><span>Payment Method:</span><span id="r-method">Cash</span></div>
+        <div class="d-flex justify-content-between" id="r-txn-row" style="display: none !important;"><span>Txn ID:</span><span id="r-txn"></span></div>
         <hr>
         <p class="text-center">Thank you for shopping!</p>
     </div>
+
+
     {% endblock %}

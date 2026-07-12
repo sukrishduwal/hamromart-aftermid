@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     # Custom Apps
-    'accounts',
+    'accounts.apps.AccountsConfig',
     'dashboard',
     'inventory',
     'products',
@@ -145,7 +145,8 @@ ALLOWED_HOSTS = ['*']
 # runserver 0.0.0.0:8000
 # http://192.168.1.84:8000/
 
-# Khalti Payment Gateway Settings
-# Set KHALTI_API_URL to 'https://khalti.com/api/v2/' and KHALTI_SECRET_KEY to your live key in production.
-KHALTI_API_URL = os.getenv('KHALTI_API_URL', 'https://dev.khalti.com/api/v2/')
-KHALTI_SECRET_KEY = os.getenv('KHALTI_SECRET_KEY', 'Key test_secret_key_a52b14421b8f416ca21c4b78c93a02bb')
+# Session settings
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 3600   # 1 hour

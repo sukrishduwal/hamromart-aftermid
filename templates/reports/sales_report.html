@@ -10,7 +10,7 @@
 <div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="card p-3 border-0 shadow-sm bg-primary text-white">
-            <h6>Total Revenue</h6>
+            <h6>Total Sales</h6>
             <h3>Rs.{{ revenue|stringformat:".2f" }}</h3>
         </div>
     </div>
@@ -71,7 +71,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                    {% for sale in recent_sales %}
+                     {% for sale in recent_sales %}
                         <tr>
                             <td class="fw-bold text-primary">#{{ sale.bill_no }}</td>
                             <td>{{ sale.timestamp|date:"M d, Y" }}</td>
@@ -84,7 +84,7 @@
                                 </a>
                             </td>
                         </tr>
-                        {% endfor %}
+                    {% endfor %}
                     </tbody>
                 </table>
             </div>

@@ -4,7 +4,7 @@
     <div class="card p-4 shadow-sm border-0" style="width: 400px; background: #fff;" id="printable-bill">
         <div class="text-center">
             <h4 class="fw-bold mb-0">HAMRO MART</h4>
-            <small class="text-muted">VAT BILL</small>
+            <small class="text-muted">RECEIPT</small>
             <small class="d-block text-muted">Bhaktapur, Nepal</small>
             <div class="d-flex justify-content-between">
                 <small class="text-muted">VAT No: 123456789</small>
@@ -17,6 +17,7 @@
             <span><strong>Date:</strong> {{ sale.timestamp|date:"d/m/Y H:i" }}</span>
         </div>
         <div class="small"><strong>Customer:</strong> {{ sale.customer.name }} ({{ sale.customer.phone }})</div>
+        <div class="small"><strong>Cashier:</strong> {% if sale.cashier %}{{ sale.cashier.username }}{% else %}N/A{% endif %}</div>
         <hr>
         <table class="table table-sm table-borderless small">
             <thead>
@@ -38,7 +39,7 @@
         </table>
         <hr>
         <div class="d-flex justify-content-between small"><span>Subtotal</span><span>Rs.{{ sale.subtotal }}</span></div>
-        <div class="d-flex justify-content-between small text-danger"><span>Discount</span><span>-Rs.{{ sale.discount}}</span></div>
+        <div class="d-flex justify-content-between small text-danger"><span>Discount</span><span>-Rs.{{sale.discount}}</span></div>
         <div class="d-flex justify-content-between fw-bold h5 mt-2"><span>TOTAL</span><span>Rs.{{ sale.total }}</span>
         </div>
         <hr>
@@ -48,7 +49,11 @@
 
         <div class="d-print-none mt-4 text-center">
             <button onclick="window.print()" class="btn btn-primary btn-sm w-100 mb-2">Print Copy</button>
-            <a href="{% url 'sales_report' %}" class="btn btn-link btn-sm text-muted">Back to Reports</a>
+            {% if user.is_superuser %}
+                <a href="{% url 'sales_report' %}" class="btn btn-link btn-sm text-muted">Back to Reports</a>
+            {% else %}
+                <a href="{% url 'product_list' %}" class="btn btn-link btn-sm text-muted">Back to Inventory</a>
+            {% endif %}
         </div>
     </div>
 </div>

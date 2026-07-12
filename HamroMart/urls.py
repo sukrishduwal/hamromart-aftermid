@@ -11,10 +11,12 @@ urlpatterns = [
     path('', include('products.urls')),
     path('', include('sales.urls')),
     path('', include('reports.urls')),
+    path('', include('inventory.urls')),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
     path('', include('accounts.urls')),  # Add this line to include accounts app URLs
     path("staff/", views.staff_management, name="staff_management"),
+    path('accounts/', include('accounts.urls')),    
     
 ] 
 

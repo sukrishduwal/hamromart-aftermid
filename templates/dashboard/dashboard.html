@@ -140,6 +140,43 @@
     </div>
 </div>
 
+<div class="row g-4 mt-4">
+    <!-- Pie Chart Card -->
+    <div class="col-lg-6">
+        <div class="card card-premium border-0 p-4 h-100">
+            <h5 class="fw-bold text-dark mb-1">Top 5 Best Selling Items</h5>
+            <p class="text-muted small mb-4">Pie chart showing the breakdown of top selling products.</p>
+            <div style="height: 300px; position: relative;">
+                <canvas id="bestSellingChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Details Card -->
+    <div class="col-lg-6">
+        <div class="card card-premium border-0 p-4 h-100">
+            <h5 class="fw-bold text-dark mb-3">Best Selling Items Details</h5>
+            <p class="text-muted small mb-4">Quantity breakdown of the top 5 products sold.</p>
+            <ul class="list-group list-group-flush">
+                {% for item in top_products %}
+                <li class="list-group-item px-0 py-3 border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold text-dark" style="font-size: 0.95rem;">{{ item.name }}</span>
+                        </div>
+                        <span class="badge bg-light text-dark border">{{ item.qty }} sold</span>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="text-muted small py-4 text-center">
+                    <i class="bi bi-inbox d-block text-secondary mb-2" style="font-size: 2rem;"></i>
+                    No sales data recorded yet.
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
 <script>
     window.addEventListener('load', function () {
         const ctx = document.getElementById('salesChart');
@@ -208,6 +245,68 @@
                                 font: {
                                     family: 'Plus Jakarta Sans',
                                     size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        const pieCtx = document.getElementById('bestSellingChart');
+        if (pieCtx) {
+            const productLabels = {{ product_labels|default:"[]" | safe }};
+            const productData = {{ product_qty_data|default:"[]" | safe }};
+
+            const colors = [
+                '#ffb6c1', // Light Pink
+                '#cbd5e1', // Light Grey
+                '#f472b6', // Medium Pink
+                '#94a3b8', // Cool Grey
+                '#ec4899'  // Deep Pink
+            ];
+            const hoverColors = [
+                '#ffa4b2', // slightly darker light pink
+                '#b9c5d3', // slightly darker light grey
+                '#e85f9e', // slightly darker medium pink
+                '#7f8e9e', // slightly darker cool grey
+                '#d0357c'  // slightly darker deep pink
+            ];
+
+            new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: productLabels,
+                    datasets: [{
+                        data: productData,
+                        backgroundColor: colors,
+                        hoverBackgroundColor: hoverColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#475569',
+                                font: {
+                                    family: 'Plus Jakarta Sans',
+                                    size: 12,
+                                    weight: '500'
+                                },
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    return ' ' + label + ': ' + value + ' sold';
                                 }
                             }
                         }

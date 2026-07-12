@@ -1,103 +1,257 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="h3">Financial Sales Report</h2>
-    <button class="btn btn-outline-primary" onclick="window.print()"><i class="bi bi-printer me-2"></i>Print
-        Report</button>
-</div>
 
-<!-- Summary Cards -->
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="card p-3 border-0 shadow-sm bg-primary text-white">
-            <h6>Total Sales</h6>
-            <h3>Rs.{{ revenue|stringformat:".2f" }}</h3>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card p-3 border-0 shadow-sm bg-success text-white">
-            <h6>Net Profit</h6>
-            <h3>Rs.{{ profit|stringformat:".2f" }}</h3>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card p-3 border-0 shadow-sm bg-info text-white">
-            <h6>Total Orders</h6>
-            <h3>{{ orders }}</h3>
-        </div>
-    </div>
-</div>
+<style>
+    /* Premium Minimalist Design (inspired by blanxes.np) */
+    .reports-container {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    .report-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.02), 0 2px 6px -2px rgba(0, 0, 0, 0.01);
+    }
+    
+    .report-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(255, 182, 193, 0.2), 0 8px 16px -6px rgba(0, 0, 0, 0.02);
+        border-color: #ffb6c1;
+    }
+    
+    /* Summary Card Details */
+    .summary-card {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background-color: #ffb6c1; /* Soft pink accent bar */
+    }
+    
+    .summary-card.accent-grey::before {
+        background-color: #94a3b8; /* Grey accent bar */
+    }
 
-<div class="row">
-    <!-- Top Selling Products -->
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm p-4 h-100">
-            <h5 class="mb-3">Top 5 Best Sellers</h5>
-            <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Sold</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in top_products %}
-                        <tr>
-                            <td>{{ item.product__name }}</td>
-                            <td><span class="badge bg-primary rounded-pill">{{ item.total_qty }}</span></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    .summary-card.accent-pink-dark::before {
+        background-color: #ec4899; /* Deep pink accent bar */
+    }
+    
+    .summary-title {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    
+    .summary-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0;
+    }
+    
+    /* Minimalist Table styling */
+    .table-custom {
+        width: 100%;
+        margin-bottom: 0;
+        color: #334155;
+    }
+    
+    .table-custom thead th {
+        background-color: #f8fafc;
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 12px 16px;
+    }
+    
+    .table-custom tbody td {
+        padding: 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+    }
+    
+    .table-custom tbody tr:hover td {
+        background-color: #fff9fa; /* extremely faint pink tint on hover */
+    }
+    
+    /* Badge styling */
+    .badge-pink-soft {
+        background-color: #fff1f2;
+        color: #db2777;
+        font-weight: 600;
+        border: 1px solid #ffe4e6;
+    }
+    
+    .badge-grey-soft {
+        background-color: #f1f5f9;
+        color: #475569;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+    }
+    
+    /* Primary buttons matching theme */
+    .btn-pink-outline {
+        border-color: #ffb6c1;
+        color: #db2777;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border-radius: 8px;
+        background: transparent;
+    }
+    
+    .btn-pink-outline:hover {
+        background-color: #ffb6c1;
+        color: #ffffff;
+        border-color: #ffb6c1;
+    }
+
+    .btn-grey-outline {
+        border-color: #cbd5e1;
+        color: #475569;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border-radius: 8px;
+        background: transparent;
+    }
+    
+    .btn-grey-outline:hover {
+        background-color: #f1f5f9;
+        color: #1e293b;
+        border-color: #94a3b8;
+    }
+</style>
+
+<div class="reports-container">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom border-light">
+        <div>
+            <h2 class="fw-extrabold text-dark mb-1">Financial Sales Report</h2>
+            <p class="text-muted small mb-0">Overview of boutique performance, transaction logs, and customer statistics.</p>
+        </div>
+        <button class="btn btn-grey-outline px-4 py-2" onclick="window.print()">
+            <i class="bi bi-printer me-2"></i>Print Report
+        </button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="report-card summary-card">
+                <h6 class="summary-title">Total Sales</h6>
+                <h3 class="summary-value">Rs.{{ revenue|default:"0.00"|floatformat:2 }}</h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="report-card summary-card accent-pink-dark">
+                <h6 class="summary-title">Net Profit</h6>
+                <h3 class="summary-value">Rs.{{ profit|default:"0.00"|floatformat:2 }}</h3>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="report-card summary-card accent-grey">
+                <h6 class="summary-title">Total Orders</h6>
+                <h3 class="summary-value">{{ orders|default:"0" }}</h3>
             </div>
         </div>
     </div>
 
-    <!-- Recent Sales Table -->
-    <div class="col-md-8">
-        <div class="card border-0 shadow-sm p-4">
-            <h5 class="mb-3">Recent Transactions</h5>
-            <div class="table-responsive">
-                <!-- Inside the Recent Transactions Table in reports.html -->
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Bill No</th> <!-- New Column -->
-                            <th>Date</th>
-                            <th>Customer</th>
-                            <th>Total</th>
-                            <th class="text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                     {% for sale in recent_sales %}
-                        <tr>
-                            <td class="fw-bold text-primary">#{{ sale.bill_no }}</td>
-                            <td>{{ sale.timestamp|date:"M d, Y" }}</td>
-                            <td>{{ sale.customer.name }}</td>
-                            <td class="fw-bold">Rs.{{ sale.total }}</td>
-                            <td class="text-center">
-                                <!-- Link to view the exact copy of the bill -->
-                                <a href="{% url 'receipt_detail' sale.id %}" class="btn btn-sm btn-outline-info">
-                                    <i class="bi bi-eye"></i> View Bill
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+    <div class="row g-4">
+        <!-- Top Selling Products -->
+        <div class="col-md-4">
+            <div class="report-card h-100">
+                <h5 class="fw-bold text-dark mb-4">Top 5 Best Sellers</h5>
+                <div class="table-responsive">
+                    <table class="table table-custom">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-end">Sold</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in top_products %}
+                            <tr>
+                                <td class="fw-bold text-dark">{{ item.product__name }}</td>
+                                <td class="text-end">
+                                    <span class="badge badge-pink-soft rounded-pill px-3 py-1">{{ item.total_qty }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center text-muted small py-4">No best sellers yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Sales Table -->
+        <div class="col-md-8">
+            <div class="report-card h-100">
+                <h5 class="fw-bold text-dark mb-4">Recent Transactions</h5>
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th>Bill No</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Total</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td class="fw-bold text-dark">#{{ sale.bill_no }}</td>
+                                <td>{{ sale.timestamp|date:"M d, Y" }}</td>
+                                <td>{{ sale.customer.name }}</td>
+                                <td class="fw-bold">Rs.{{ sale.total }}</td>
+                                <td class="text-center">
+                                    <a href="{% url 'receipt_detail' sale.id %}" class="btn btn-sm btn-pink-outline py-1 px-3">
+                                        <i class="bi bi-eye"></i> View Bill
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted small py-4">No recent sales recorded.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
+
     <!-- Customer Summary Section -->
     <div class="row mt-4">
         <div class="col-md-12">
-            <div class="card border-0 shadow-sm p-4">
-                <h5 class="mb-3">Customer Summary</h5>
+            <div class="report-card">
+                <h5 class="fw-bold text-dark mb-4">Customer Summary</h5>
                 <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead class="table-light">
+                    <table class="table table-custom">
+                        <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Phone</th>
@@ -108,10 +262,16 @@
                         <tbody>
                             {% for cust in customer_stats %}
                             <tr>
-                                <td>{{ cust.name }}</td>
+                                <td class="fw-bold text-dark">{{ cust.name }}</td>
                                 <td>{{ cust.phone }}</td>
                                 <td>Rs.{{ cust.total_spent|default:"0.00"|floatformat:2 }}</td>
-                                <td>{{ cust.order_count }}</td>
+                                <td>
+                                    <span class="badge badge-grey-soft px-3 py-1">{{ cust.order_count }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted small py-4">No customer records yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -120,14 +280,15 @@
             </div>
         </div>
     </div>
+
     <!-- Purchase History Section -->
     <div class="row mt-4">
         <div class="col-md-12">
-            <div class="card border-0 shadow-sm p-4">
-                <h5 class="mb-3">Purchase History</h5>
+            <div class="report-card">
+                <h5 class="fw-bold text-dark mb-4">Purchase History</h5>
                 <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead class="table-light">
+                    <table class="table table-custom">
+                        <thead>
                             <tr>
                                 <th>Supplier</th>
                                 <th>Product</th>
@@ -138,13 +299,15 @@
                         <tbody>
                             {% for ph in purchase_history %}
                             <tr>
-                                <td>{{ ph.supplier_name }}</td>
+                                <td class="fw-bold text-dark">{{ ph.supplier_name }}</td>
                                 <td>{{ ph.product.name }}</td>
                                 <td>{{ ph.purchase_date|date:"M d, Y" }}</td>
                                 <td>Rs.{{ ph.purchase_price|floatformat:2 }}</td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="4" class="text-center">No purchase records</td></tr>
+                            <tr>
+                                <td colspan="4" class="text-center text-muted small py-4">No purchase records found.</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -152,5 +315,6 @@
             </div>
         </div>
     </div>
+</div>
 
 {% endblock %}

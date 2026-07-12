@@ -41,6 +41,14 @@ def admin_dashboard(request):
         .annotate(percentage=ExpressionWrapper(F('qty') * 100.0 / total_qty, output_field=FloatField()))\
         .order_by('-qty')[:5]
 
+    # 4. Top 5 Best Selling Items logic
+    top_products = SaleItem.objects.values(name=F('product__name'))\
+        .annotate(qty=Sum('quantity'))\
+        .order_by('-qty')[:5]
+    
+    product_labels = [item['name'] for item in top_products]
+    product_qty_data = [int(item['qty'] or 0) for item in top_products]
+
     context = {
         'total_sales': total_sales,
         'total_orders': total_orders,
@@ -48,6 +56,9 @@ def admin_dashboard(request):
         'labels': labels,
         'data': data,
         'top_categories': top_categories,
+        'top_products': top_products,
+        'product_labels': product_labels,
+        'product_qty_data': product_qty_data,
     }
     return render(request, 'dashboard/dashboard.html', context)
 def discount_settings(request):

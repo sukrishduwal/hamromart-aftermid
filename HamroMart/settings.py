@@ -141,3 +141,6 @@ LOGOUT_REDIRECT_URL = '/login/' # Or use '/admin/login/' if you don't have a cus
 LOGIN_REDIRECT_URL = 'dashboard' # Ensure this matches your actual login URL
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.1.84']  # Add your server's IP address here
 ALLOWED_HOSTS = ['*']
+
+# runserver 0.0.0.0:8000
+# http://192.168.1.84:8000/

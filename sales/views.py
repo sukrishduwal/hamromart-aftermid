@@ -13,7 +13,6 @@ PHONE_NUMBER_RE = re.compile(r'^(97|98)\d{8}$')
 STAFF_POOL_MAX = 25   # max units visible to staff at once
 STAFF_LOW_THRESHOLD = 5  # trigger auto-restore when staff pool hits this
 
-
 def is_valid_phone_number(phone):
     phone = (phone or '').strip()
     return bool(PHONE_NUMBER_RE.fullmatch(phone))
@@ -39,14 +38,23 @@ def pos_view(request):
 
 @login_required
 def get_customer_history(request):
-    phone = request.GET.get('phone')
+    phone = (request.GET.get('phone') or '').strip()
     try:
         customer = Customer.objects.get(phone=phone)
-        sales = Sale.objects.filter(customer=customer).order_by('-timestamp')[:3]
-        history = [{"date": s.timestamp.strftime("%Y-%m-%d"), "total": float(s.total)} for s in sales]
+        sales = Sale.objects.filter(customer=customer).order_by('-timestamp')[:10]
+        history = [{
+            "id": s.id,
+            "date": s.timestamp.strftime("%Y-%m-%d"),
+            "total": float(s.total),
+            "bill_no": s.bill_no,
+        } for s in sales]
         return JsonResponse({"status": "success", "name": customer.name, "history": history})
     except Customer.DoesNotExist:
         return JsonResponse({"status": "not_found"})
+    
+@login_required
+def customer_history_view(request):
+    return render(request, 'pos/customer_history.html')
 
 
 @login_required
@@ -73,6 +81,9 @@ def process_sale(request):
                 subtotal=data['subtotal'],
                 discount=data.get('discount', 0),
                 total=data['total'],
+                payment_method='Cash',
+                payment_status='Completed',
+                transaction_id=None,
             )
 
             is_admin = request.user.is_superuser
@@ -82,6 +93,22 @@ def process_sale(request):
             for item in data['cart']:
                 product = Product.objects.get(id=item['id'])
                 qty_sold = int(item['qty'])
+
+                # Check available stock
+                if request.user.is_superuser:
+                    available = product.quantity
+                else:
+                    available = product.staff_quantity
+
+                if qty_sold > available:
+                    sale.delete()
+                    return JsonResponse(
+                        {
+                            "status": "error",
+                            "message": f"Only {available} unit(s) of {product.name} are available."
+                        },
+                        status=400,
+                    )
 
                 SaleItem.objects.create(
                     sale=sale,
@@ -109,22 +136,30 @@ def process_sale(request):
                 })
 
                 # Auto-restore staff pool if running low and master stock available
-                if (product.staff_quantity <= STAFF_LOW_THRESHOLD and
-                        product.quantity > product.staff_quantity):
+                if (
+                    product.staff_quantity <= STAFF_LOW_THRESHOLD
+                    and product.quantity > product.staff_quantity
+                ):
                     restore_to = min(STAFF_POOL_MAX, product.quantity)
                     product.staff_quantity = restore_to
                     product.save()
 
-            return JsonResponse({"status": "success","bill_no": sale.bill_no,"updated_products": updated_products,})
-            return JsonResponse({"status": "success", "sale_id": sale.id, "bill_no": sale.bill_no})
+            return JsonResponse({
+                "status": "success",
+                "payment_method": "Cash",
+                "payment_status": "Completed",
+                "sale_id": sale.id,
+                "bill_no": sale.bill_no,
+                "transaction_id": ""
+            })
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
 
 @login_required
 def receipt_detail(request, pk):
-    if not request.user.is_superuser:
-        raise PermissionDenied("Only administrators are allowed to view receipt details.")
+    if not (request.user.is_superuser or request.user.groups.filter(name='Cashier').exists()):
+        raise PermissionDenied("Only administrators and cashiers are allowed to view receipt details.")
     sale = get_object_or_404(Sale, pk=pk)
     return render(request, 'receipt/receipt_detail.html', {'sale': sale})
     return JsonResponse ({"success": true,"bill_no": sale.bill_no})

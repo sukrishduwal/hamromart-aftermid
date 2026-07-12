@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="main-content" style="background: #f9f1f6; padding: 2.5rem 0;">
+    <div class="card shadow-sm p-4 border-0 history-card mx-auto" style="max-width: 900px;">
+        <h3 class="mb-2" style="color: #b83b72;">Customer History</h3>
+        <p class="mb-4" style="color: #6b4f5f;">Enter the customer phone number to view their latest 10 purchase.</p>
+
+        <div class="row g-3 align-items-end mb-4">
+            <div class="col-md-4">
+                <label for="historyPhone" class="form-label" style="color: #5b3d53;">Customer Phone</label>
+                <input type="tel" id="historyPhone" class="form-control form-control-lg" placeholder="97XXXXXXXX"
+                    maxlength="10" inputmode="numeric" pattern="^(97|98)\d{8}$" style="border-color: #e3c2d6; background: #fff5fb;">
+            </div>
+            <div class="col-md-3">
+                <button id="btnHistorySearch" class="btn btn-pink btn-lg w-100">Load History</button>
+            </div>
+        </div>
+
+        <div id="historyAlert" class="alert d-none" role="alert"></div>
+
+        <div id="historyResult" class="d-none history-result-panel mt-3">
+            <div id="historyCustomerInfo" class="mb-4 fw-semibold" style="color: #6b3f59;"></div>
+            <div id="historyList"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .history-card {
+        background: #fff1f8;
+        border: 1px solid #f2d7e7;
+        border-radius: 24px;
+    }
+
+    .history-result-panel {
+        background: #f6eef5;
+        border: 1px solid #ecd3e4;
+        border-radius: 20px;
+        padding: 1.15rem;
+    }
+
+    .history-item {
+        background: #ffffff;
+        border: 1px solid #f1d6e2;
+        border-radius: 18px;
+        margin-bottom: 1rem;
+        padding: 1rem 1rem 0.85rem;
+    }
+
+    .history-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .history-total {
+        color: #b53b7a;
+        font-size: 1rem;
+        min-width: 140px;
+        text-align: right;
+    }
+
+    .btn-pink {
+        background: #d97aa6;
+        border-color: #d97aa6;
+        color: #ffffff;
+    }
+
+    .btn-pink:hover {
+        background: #c76591;
+        border-color: #c76591;
+    }
+
+    .history-action {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        min-width: 220px;
+    }
+
+    .history-meta {
+        color: #5f3f56;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('btnHistorySearch');
+        const phoneInput = document.getElementById('historyPhone');
+
+        btn.addEventListener('click', loadHistory);
+        phoneInput.addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                loadHistory();
+            }
+        });
+    });
+
+    async function loadHistory() {
+        const phone = document.getElementById('historyPhone').value.trim();
+        const alertBox = document.getElementById('historyAlert');
+        const resultPanel = document.getElementById('historyResult');
+        const historyList = document.getElementById('historyList');
+        const customerInfo = document.getElementById('historyCustomerInfo');
+
+        alertBox.className = 'alert d-none';
+        resultPanel.classList.add('d-none');
+        historyList.innerHTML = '';
+        customerInfo.innerText = '';
+
+        if (!/^(97|98)\d{8}$/.test(phone)) {
+            alertBox.className = 'alert alert-warning';
+            alertBox.innerText = 'Please enter a valid 10-digit phone number starting with 97 or 98.';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/pos/history/?phone=${encodeURIComponent(phone)}`);
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                customerInfo.innerText = `Customer: ${data.name} (${phone})`;
+
+                if (data.history.length === 0) {
+                    alertBox.className = 'alert alert-secondary';
+                    alertBox.innerText = 'No purchases found for this customer.';
+                } else {
+                    resultPanel.classList.remove('d-none');
+                    data.history.forEach(entry => {
+                        const item = document.createElement('div');
+                        item.className = 'history-item';
+                        item.innerHTML = `
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+                                <div>
+                                    <strong class="d-block mb-2">${entry.date}</strong>
+                                    <div class="history-meta">Invoice: ${entry.bill_no}</div>
+                                </div>
+                                <div class="history-action">
+                                    <span class="history-total">Rs.${entry.total.toFixed(2)}</span>
+                                    <a href="/receipt/${entry.id}/" target="_blank" class="btn btn-pink btn-sm">Print Receipt</a>
+                                </div>
+                            </div>
+                        `;
+                        historyList.appendChild(item);
+                    });
+                }
+            } else {
+                alertBox.className = 'alert alert-secondary';
+                alertBox.innerText = 'Customer not found. No purchase history available.';
+            }
+        } catch (error) {
+            alertBox.className = 'alert alert-danger';
+            alertBox.innerText = 'Unable to load history. Please try again.';
+        }
+    }
+</script>
+{% endblock %}

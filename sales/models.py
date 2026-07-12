@@ -8,6 +8,9 @@ class Sale(models.Model):
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     timestamp = models.DateTimeField(auto_now_add=True)
+    payment_method = models.CharField(max_length=20, default='Cash', choices=[('Cash', 'Cash'), ('Khalti', 'Khalti')])
+    payment_status = models.CharField(max_length=20, default='Completed', choices=[('Pending', 'Pending'), ('Completed', 'Completed'), ('Cancelled', 'Cancelled')])
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
 
     @property
     def bill_no(self):

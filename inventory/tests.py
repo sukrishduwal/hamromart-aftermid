@@ -4,8 +4,8 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Category, Product
-from .views import is_valid_phone_number
+from products.models import Category, Product
+from sales.views import is_valid_phone_number
 
 
 class PhoneNumberValidationTests(TestCase):
@@ -25,7 +25,6 @@ class PhoneNumberValidationTests(TestCase):
 			name='Sneaker',
 			sku='SKU-1',
 			category=category,
-			size='M',
 			color='Black',
 			cost_price=100,
 			selling_price=150,

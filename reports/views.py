@@ -18,7 +18,7 @@ def sales_report(request):
     total_profit = sum(item.quantity * (item.product.selling_price - item.product.cost_price) for item in all_sold_items)
 
     recent_sales = Sale.objects.select_related('customer').prefetch_related('items__product').order_by('-timestamp')[:10]
-
+    
     product_ids = SaleItem.objects.filter(sale__in=recent_sales).values_list('product_id', flat=True).distinct()
     purchase_history = Purchase.objects.filter(product_id__in=product_ids).select_related('product').order_by('-purchase_date')
     top_products = SaleItem.objects.values('product__name').annotate(total_qty=Sum('quantity')).order_by('-total_qty')[:5]
@@ -26,7 +26,9 @@ def sales_report(request):
     customer_stats = Customer.objects.annotate(
         total_spent=Sum('sale__total'),
         order_count=Count('sale')
-    )
+    ).order_by('-total_spent')[:10]
+
+    purchase_history = Purchase.objects.filter(product_id__in=product_ids).select_related('product').order_by('-purchase_date')[:10]
     
     context = {
         'revenue': total_revenue,

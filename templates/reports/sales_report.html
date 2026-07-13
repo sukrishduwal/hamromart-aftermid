@@ -1,12 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="h3">Financial Sales Report</h2>
-    <a href="{% url 'export_sales_excel' %}" class="btn btn-success"><i class="bi bi-file-earmark-excel me-2"></i> Export Excel</a>
-</div>
+
 
 <style>
-    /* Premium Minimalist Design (inspired by blanxes.np) */
     .reports-container {
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
@@ -147,7 +143,19 @@
     <div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom border-light">
         <div>
             <h2 class="fw-extrabold text-dark mb-1">Financial Sales Report</h2>
-            <p class="text-muted small mb-0">Overview of boutique performance, transaction logs, and customer statistics.</p>
+            <div class="d-flex gap-2">
+
+    <a href="{% url 'export_sales_excel' %}" class="btn btn-primary">
+        <i class="bi bi-file-earmark-excel"></i>
+        Export Sales
+    </a>
+
+    <a href="{% url 'export_purchase_excel' %}" class="btn btn-primary">
+        <i class="bi bi-file-earmark-excel"></i>
+        Export Purchase
+    </a>
+
+</div>
         </div>
       
     </div>

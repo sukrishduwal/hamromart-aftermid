@@ -44,19 +44,26 @@
 <!-- Summary Cards Grid -->
 <div class="row g-4 mb-4">
     <!-- Sales Card -->
-    <div class="col-md-4">
-        <div class="card card-premium card-sales border-0 p-4">
+<div class="col-md-4">
+    <a href="{% url 'sales_report' %}" class="text-decoration-none text-dark">
+        <div class="card card-premium card-sales border-0 p-4 dashboard-card">
             <div class="d-flex align-items-center">
                 <div class="icon-box me-3">
                     <i class="bi bi-wallet2"></i>
                 </div>
                 <div>
-                    <h6 class="text-muted small fw-bold text-uppercase mb-1" style="letter-spacing: 0.5px;">Total Revenue</h6>
-                    <h3 class="fw-extrabold text-dark mb-0">Rs.{{ total_sales|default:"0"|floatformat:2 }}</h3>
+                    <h6 class="text-muted small fw-bold text-uppercase mb-1" style="letter-spacing: 0.5px;">
+                        Total Revenue
+                    </h6>
+                    <h3 class="fw-extrabold text-dark mb-0">
+                        Rs.{{ total_sales|default:"0"|floatformat:2 }}
+                    </h3>
                 </div>
             </div>
         </div>
-    </div>
+     </a>
+</div>
+  
     
     <!-- POS Card -->
     <div class="col-md-4">

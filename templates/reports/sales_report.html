@@ -2,8 +2,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="h3">Financial Sales Report</h2>
-    <button class="btn btn-outline-primary" onclick="window.print()"><i class="bi bi-printer me-2"></i>Print
-        Report</button>
+    <a href="{% url 'export_sales_excel' %}" class="btn btn-success"><i class="bi bi-file-earmark-excel me-2"></i> Export Excel</a>
 </div>
 
 <!-- Summary Cards -->

@@ -13,7 +13,8 @@
         </div>
         <hr>
         <div class="d-flex justify-content-between small">
-            <span><strong>Bill No:</strong> #{{ sale.bill_no }}</span>
+            <span><strong>Bill No:</strong> #{{ sale.bill_no }}</span></div>
+        <div class="d-flex justify-content-between small">
             <span><strong>Date:</strong> {{ sale.timestamp|date:"d/m/Y H:i" }}</span>
         </div>
         <div class="small"><strong>Customer:</strong> {{ sale.customer.name }} ({{ sale.customer.phone }})</div>

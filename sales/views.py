@@ -7,6 +7,10 @@ from django.core.exceptions import PermissionDenied
 from products.models import Product
 from customers.models import Customer
 from .models import Sale, SaleItem,DiscountScheme
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill
+
 PHONE_NUMBER_RE = re.compile(r'^(97|98)\d{8}$')
 
 STAFF_POOL_MAX = 25   # max units visible to staff at once
@@ -16,6 +20,15 @@ def is_valid_phone_number(phone):
     phone = (phone or '').strip()
     return bool(PHONE_NUMBER_RE.fullmatch(phone))
 
+@login_required
+def sales_report(request):
+    sales = Sale.objects.all().order_by('-timestamp')
+
+    context = {
+        "sales": sales,
+    }
+
+    return render(request, "sales/sales_report.html", context)
 
 @login_required
 def pos_view(request):
@@ -163,4 +176,97 @@ def receipt_detail(request, pk):
         raise PermissionDenied("Only administrators and cashiers are allowed to view receipt details.")
     sale = get_object_or_404(Sale, pk=pk)
     return render(request, 'receipt/receipt_detail.html', {'sale': sale})
-    return JsonResponse ({"success": true,"bill_no": sale.bill_no})
+    # return JsonResponse ({"success": true,"bill_no": sale.bill_no})
+
+
+@login_required
+def export_sales_excel(request):
+    # Only Admin can export sales report
+    if not request.user.is_superuser:
+        raise PermissionDenied("Only administrators can export sales reports.")
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Sales Report"
+
+    # Report Title
+    ws.merge_cells("A1:I1")
+    ws["A1"] = "Hamro Mart Sales Report"
+    ws["A1"].font = Font(size=16, bold=True)
+
+    # Header Row
+    headers = [
+        "Bill No",
+        "Customer",
+        "Cashier",
+        "Date & Time",
+        "Subtotal",
+        "Discount",
+        "Total",
+        "Payment Method",
+        "Payment Status",
+    ]
+
+    fill = PatternFill(start_color="4F81BD",
+                       end_color="4F81BD",
+                       fill_type="solid")
+
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col)
+        cell.value = header
+        cell.font = Font(bold=True)
+        cell.fill = fill
+
+    sales = Sale.objects.select_related(
+        "customer",
+        "cashier"
+    ).order_by("-timestamp")
+
+    row = 4
+    total_sales = 0
+
+    for sale in sales:
+        ws.cell(row=row, column=1).value = sale.bill_no
+        ws.cell(row=row, column=2).value = sale.customer.name if sale.customer else "Walk-in Customer"
+        ws.cell(row=row, column=3).value = sale.cashier.username if sale.cashier else "-"
+        ws.cell(row=row, column=4).value = sale.timestamp.strftime("%d-%m-%Y %H:%M")
+        ws.cell(row=row, column=5).value = float(sale.subtotal)
+        ws.cell(row=row, column=6).value = float(sale.discount)
+        ws.cell(row=row, column=7).value = float(sale.total)
+        ws.cell(row=row, column=8).value = sale.payment_method
+        ws.cell(row=row, column=9).value = sale.payment_status
+
+        total_sales += float(sale.total)
+        row += 1
+
+    # Summary
+    row += 2
+    ws.cell(row=row, column=6).value = "Grand Total"
+    ws.cell(row=row, column=6).font = Font(bold=True)
+    ws.cell(row=row, column=7).value = total_sales
+    ws.cell(row=row, column=7).font = Font(bold=True)
+
+    # Auto-size columns
+    from openpyxl.utils import get_column_letter
+
+    for col in range(1, ws.max_column + 1):
+        max_length = 0
+        column_letter = get_column_letter(col)
+
+        for row in range(1, ws.max_row + 1):
+            cell = ws.cell(row=row, column=col)
+        try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+        except Exception:
+            pass
+
+    ws.column_dimensions[column_letter].width = max_length + 5
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="HamroMart_Sales_Report.xlsx"'
+
+    wb.save(response)
+    return response

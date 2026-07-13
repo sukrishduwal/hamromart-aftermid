@@ -40,28 +40,97 @@ def delete_product(request, pk):
 def add_product(request):
     if not request.user.is_superuser:
         raise PermissionDenied("Only administrators are allowed to add products.")
-    if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES, user=request.user)
-        if form.is_valid():
-            prod = form.save(commit=False)
-            prod.staff_quantity = min(25, prod.quantity)
-            prod.save()
 
-            # Create initial purchase record
-            supplier = form.cleaned_data.get('supplier_name') or 'Initial Stock'
-            price = form.cleaned_data.get('purchase_price') or prod.cost_price or 0
-            from inventory.models import Purchase
-            Purchase.objects.create(
-                product=prod,
-                supplier_name=supplier,
-                purchase_price=price
-            )
+    if request.method == 'POST':
+
+        form = ProductForm(
+            request.POST,
+            request.FILES,
+            user=request.user
+        )
+
+        if form.is_valid():
+
+            supplier = request.POST.get('supplier_name') or 'Initial Stock'
+
+            purchase_products = request.POST.getlist('purchase_product[]')
+            purchase_qty = request.POST.getlist('purchase_quantity[]')
+            purchase_prices = request.POST.getlist('purchase_price[]')
+
+
+            # If multiple purchase items exist
+            if purchase_products:
+
+                from inventory.models import Purchase
+
+
+                for i in range(len(purchase_products)):
+
+                    name = purchase_products[i]
+                    qty = int(purchase_qty[i] or 0)
+                    price = float(purchase_prices[i] or 0)
+
+
+                    # Create product
+                    product = Product.objects.create(
+                        name=name,
+                        quantity=qty,
+                        staff_quantity=min(25, qty),
+                        cost_price=price,
+                        selling_price=0,
+                        supplier_name=supplier
+                    )
+
+
+                    # Create purchase history
+                    Purchase.objects.create(
+                        product=product,
+                        supplier_name=supplier,
+                        purchase_price=price
+                    )
+
+
+            else:
+
+                # Existing single product behavior
+                prod = form.save(commit=False)
+
+                prod.staff_quantity = min(
+                    25,
+                    prod.quantity
+                )
+
+                prod.save()
+
+
+                from inventory.models import Purchase
+
+                Purchase.objects.create(
+                    product=prod,
+                    supplier_name=supplier,
+                    purchase_price=(
+                        form.cleaned_data.get('purchase_price')
+                        or prod.cost_price
+                        or 0
+                    )
+                )
+
+
             return redirect('product_list')
+
+
     else:
         form = ProductForm(user=request.user)
-    return render(request, 'inventory/product_form.html', {'form': form, 'title': 'Add Product'})
 
 
+    return render(
+        request,
+        'inventory/product_form.html',
+        {
+            'form': form,
+            'title': 'Add Product'
+        }
+    )
 @login_required
 def update_product(request, pk):
     product = get_object_or_404(Product, id=pk)

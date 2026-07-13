@@ -6,7 +6,7 @@
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="card card-premium border-0 mb-4">
-            <div class="card-header bg-primary text-white py-3 px-4 d-flex align-items-center" style="border-radius: 16px 16px 0 0;">
+            <div class="card-header text-white py-3 px-4 d-flex align-items-center" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); border-radius: 16px 16px 0 0;">
                 <h4 class="mb-0 fw-bold d-flex align-items-center" style="font-size: 1.15rem;">
                     {% if "Add" in title %}
                     <i class="bi bi-bag-plus-fill me-2" style="font-size: 1.25rem;"></i>
@@ -43,7 +43,7 @@
                             <label class="form-label fw-semibold small text-dark">Category <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 {{ form.category }}
-                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal" title="Add New Category">
+                                <button type="button" class="btn btn-outline-secondary" style="color: var(--primary); border-color: var(--primary);" data-bs-toggle="modal" data-bs-target="#addCategoryModal" title="Add New Category">
                                     <i class="bi bi-plus-lg"></i>
                                 </button>
                             </div>
@@ -101,8 +101,8 @@
                     </div>
 
                     <!-- ── Section: Purchase Info ── -->
-                    <div class="border rounded-3 p-3 mb-4" style="background: linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(99,102,241,0.01) 100%); border-color: rgba(99,102,241,0.2) !important;">
-                        <h6 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                    <div class="border rounded-3 p-3 mb-4" style="background: linear-gradient(135deg, rgba(219,39,119,0.03) 0%, rgba(148,163,184,0.03) 100%); border-color: rgba(219,39,119,0.2) !important;">
+                        <h6 class="fw-bold mb-3 d-flex align-items-center" style="color: var(--primary);">
                             <i class="bi bi-truck me-2"></i>
                             {% if "Add" in title %}Initial Purchase Details{% else %}Record New Purchase / Restock{% endif %}
                         </h6>
@@ -137,12 +137,12 @@
 <div class="row justify-content-center mt-2">
     <div class="col-lg-8">
         <div class="card card-premium border-0 mb-5">
-            <div class="card-header py-3 px-4 d-flex align-items-center" style="background: linear-gradient(135deg,#1e293b,#334155); border-radius:16px 16px 0 0;">
+            <div class="card-header py-3 px-4 d-flex align-items-center" style="background: linear-gradient(135deg, #475569, #334155); border-radius: 16px 16px 0 0;">
                 <h5 class="mb-0 fw-bold text-white d-flex align-items-center" style="font-size: 1rem;">
-                    <i class="bi bi-clock-history me-2 text-primary"></i>Purchase History
+                    <i class="bi bi-clock-history me-2" style="color: var(--primary) !important;"></i>Purchase History
                 </h5>
             </div>
-            <div class="card-body p-0 bg-white" style="border-radius:0 0 16px 16px;">
+            <div class="card-body p-0 bg-white" style="border-radius: 0 0 16px 16px;">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
@@ -157,7 +157,7 @@
                             <tr>
                                 <td class="px-4 fw-semibold text-dark">{{ purchase.supplier_name }}</td>
                                 <td class="text-muted small">{{ purchase.purchase_date|date:"M d, Y  H:i" }}</td>
-                                <td class="px-4 text-end fw-bold text-primary">Rs. {{ purchase.purchase_price }}</td>
+                                <td class="px-4 text-end fw-bold" style="color: var(--primary);">Rs. {{ purchase.purchase_price }}</td>
                             </tr>
                             {% empty %}
                             <tr>

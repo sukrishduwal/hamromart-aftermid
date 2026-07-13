@@ -22,23 +22,24 @@
 
     <style>
         :root {
-            --primary: #6366f1;
-            /* Indigo */
-            --primary-hover: #4f46e5;
-            --primary-soft: rgba(99, 102, 241, 0.08);
+            --primary: #db2777;
+            /* Pink 600 */
+            --primary-hover: #be185d;
+            /* Pink 700 */
+            --primary-soft: rgba(219, 39, 119, 0.08);
             --dark-bg: #ffb6c1;
-            /* Slate 900 */
+            /* Rose 100 */
             --sidebar-end: #ffb6c1;
-            /* Slate 800 */
+            /* Pink 200 */
             --bg-color: #f8fafc;
             /* Slate 50 */
-            --border-color: #0a0a0a;
-            /* Slate 100 */
+            --border-color: #e2e8f0;
+            /* Slate 200 */
             --text-main: #334155;
             /* Slate 700 */
             --text-muted: #64748b;
             /* Slate 500 */
-            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05), 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+            --card-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
             --font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
@@ -57,7 +58,7 @@
         .header-nav {
             background: linear-gradient(135deg, var(--dark-bg) 0%, var(--sidebar-end) 100%);
             box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             padding: 12px 30px;
             position: sticky;
             top: 0;
@@ -71,23 +72,23 @@
             transition: all 0.3s ease;
             background: #ffffff;
             padding: 3px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
         .logo-img:hover {
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.25);
         }
 
         .nav-link-horizontal {
-            color: #0f172a !important;
+            color: #475569 !important;
             text-decoration: none;
             padding: 8px 16px;
             display: inline-flex;
             align-items: center;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 500;
-            font-size: 0.95rem;
+            font-weight: 600;
+            font-size: 0.92rem;
             margin: 0 4px;
             border-radius: 8px;
         }
@@ -95,20 +96,28 @@
         .nav-link-horizontal i {
             font-size: 1.15rem;
             transition: transform 0.2s ease;
+            color: #64748b;
         }
 
         .nav-link-horizontal:hover {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.4);
+            color: var(--primary) !important;
         }
 
         .nav-link-horizontal:hover i {
             transform: scale(1.08);
+            color: var(--primary);
         }
 
         .nav-link-horizontal.active {
-            background: rgba(99, 102, 241, 0.15);
-            font-weight: 600;
-            box-shadow: inset 0 0 0 1px rgba(234, 216, 76, 0.86);
+            background: #ffffff;
+            color: var(--primary) !important;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(219, 39, 119, 0.08);
+        }
+
+        .nav-link-horizontal.active i {
+            color: var(--primary);
         }
 
         /* Main Content Styling */
@@ -147,7 +156,7 @@
         .form-control:focus,
         .form-select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 0 4px rgba(219, 39, 119, 0.15);
         }
 
         /* Custom buttons */
@@ -165,7 +174,7 @@
             background-color: var(--primary-hover);
             border-color: var(--primary-hover);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 4px 12px rgba(219, 39, 119, 0.2);
         }
 
         .btn-outline-secondary {
@@ -190,13 +199,14 @@
         }
 
         .badge-admin {
-            background-color: rgba(99, 102, 241, 0.15) !important;
+            background-color: rgba(219, 39, 119, 0.1) !important;
             color: var(--primary) !important;
         }
 
         .badge-user {
-            background-color: rgba(148, 163, 184, 0.15) !important;
-            color: #cbd5e1 !important;
+            background-color: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0;
         }
     </style>
 </head>

@@ -20,11 +20,11 @@
         </div>
         <div class="row g-3" id="productList">
             {% for p in products %}
-            <div class="col-md-4 product-card" id="product-{{ p.id }}" data-name="{{ p.name }}"data-sku="{{ p.sku }}">
+            <div class="col-md-4 product-card" id="product-{{ p.id }}" data-name="{{ p.name }}" data-sku="{{ p.sku }}">
                 <div class="card h-100 shadow-sm border-0 text-center p-2"
                     onclick="addToCart('{{ p.id }}', '{{ p.name }}','{{ p.selling_price }}', '{{ p.staff_quantity }}')">
                     {% if p.image %}
-                    <img src="{{ p.image.url }}" class="card-img-top rounded mx-auto"
+                    <img src="{{ p.image.url }}" class="card-img-top rounded mx-auto"~
                         style="height: 100px; width: 100px; object-fit: cover;">
                     {% endif %}
                     <div class="card-body p-2">
@@ -198,150 +198,139 @@
         }
 
         function updateTotals() {
-            <script>
-                const discountScheme = {
-                    minPurchase: {{ scheme.min_purchase }},
-                stepAmount: {{ scheme.step_amount }},
-                stepDiscount: {{ scheme.step_discount }},
-                maxDiscount: {{ scheme.max_discount }}
-                };
-    
-        let sub = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const sub = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            let discountPercent = 0;
+            const minPurchase = {{ scheme.min_purchase|default:0 }};
+            const stepAmount = {{ scheme.step_amount|default:0 }};
+            const stepDiscount = {{ scheme.step_discount|default:0 }};
+            const maxDiscount = {{ scheme.max_discount|default:0 }};
 
-        let discountPercent = 0;
-
-        if (sub >= {{ scheme.min_purchase }}) {
-
-            discountPercent =Math.floor(sub / {{ scheme.step_amount }})*{{ scheme.step_discount }};
-
-
-            discountPercent = Math.min(discountPercent,{{ scheme.max_discount }});
-        }
-        let discountAmount = sub * (discountPercent / 100);
-        let total = sub - discountAmount;
-
-        document.getElementById("subtotal").innerText = `Rs.${sub.toFixed(2)}`;
-        document.getElementById("discount").value = discountAmount.toFixed(2);
-        document.getElementById("total").innerText = `Rs.${total.toFixed(2)}`;
-        }
-
-        async function checkout() {
-        for (const item of cart) {
-            if (item.qty > item.staff_quantity) {
-            alert(`${item.name} has only ${item.staff_quantity} items available.`);
-            return;
-        }
-        }   
-
-        const phone = document.getElementById('custPhone').value.trim();
-        if (!/^(97|98)\d{8}$/.test(phone)) {
-            return alert("Phone number must be exactly 10 digits and start with 97 or 98.");
-        }
-        if (cart.length === 0) return alert("Cart is empty");
-
-        const btnCheckout = document.getElementById("btnCheckout");
-        if (btnCheckout) btnCheckout.disabled = true;
-
-        const name = document.getElementById('custName').value || "Walk-in Customer";
-        const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('Rs.', ''));
-        const discount = parseFloat(document.getElementById('discount').value) || 0;
-        const total = parseFloat(document.getElementById('total').innerText.replace('Rs.', ''));
-
-        const data = {
-        phone: phone,
-        name: name,
-        subtotal: subtotal,
-        discount: discount,
-        total: total,
-        cart: cart
-        };
-
-        try {
-            const response = await fetch('/pos/checkout/', {
-                method: 'POST',
-                headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-        if (response.ok) {
-            const result = await response.json();
-
-            document.getElementById('r-date').innerText = new Date().toLocaleString();
-            document.getElementById('r-cust').innerText = name + " (" + phone + ")";
-
-            document.getElementById('r-sub').innerText = `Rs.${subtotal.toFixed(2)}`;
-            document.getElementById('r-disc').innerText = `Rs.${discount.toFixed(2)}`;
-            document.getElementById('r-total').innerText = `Rs.${total.toFixed(2)}`;
-
-            document.getElementById('r-method').innerText = 'Cash';
-            document.getElementById('r-txn-row').style.display = 'none';
-
-            document.getElementById('r-items').innerHTML = cart.map(item => `
-            <tr>
-                <td style="padding: 5px 0;">
-                    ${item.name}<br>
-                    <small>${item.qty} x Rs.${item.price.toFixed(2)}</small>
-                </td>
-                <td style="text-align: right;">Rs.${(item.price * item.qty).toFixed(2)}</td>
-            </tr>
-    `).join('');
-
-        alert(`Checkout completed successfully.`);
-        printReceipt();
-        } else {
-            let errorMessage = "Error processing transaction.";
-            try {
-                const result = await response.json();
-                if (result && result.message) {
-                    errorMessage = result.message;
-                }
-            } catch (error) {
-            const fallback = await response.text();
-            if (fallback) {
-                errorMessage = fallback;
+            if (sub >= minPurchase && stepAmount > 0) {
+                discountPercent = Math.floor(sub / stepAmount) * stepDiscount;
+                discountPercent = Math.min(discountPercent, maxDiscount);
             }
-            }
-            alert(errorMessage);
-            if (btnCheckout) btnCheckout.disabled = false;
-        }
-        } catch (err) {
-            alert("Connection error: " + err.message);
-        if (btnCheckout) btnCheckout.disabled = false;
-            }
-        }
 
-        function printReceipt() {
-            window.addEventListener("afterprint", resetPOS, { once: true });
-            window.print();
-        }
+            const discountAmount = sub * (discountPercent / 100);
+            const total = sub - discountAmount;
 
-        function resetPOS() {
-            cart = [];
-            document.getElementById("custPhone").value = "";
-            document.getElementById("custName").value = "";
-            document.getElementById("discount").value = 0;
+            document.getElementById("subtotal").innerText = `Rs.${sub.toFixed(2)}`;
+            document.getElementById("discount").value = discountAmount.toFixed(2);
+            document.getElementById("total").innerText = `Rs.${total.toFixed(2)}`;
+    }
 
-            renderCart();
+    async function checkout() {
+    for (const item of cart) {
+    if (item.qty > item.staff_quantity) {
+    alert(`${item.name} has only ${item.staff_quantity} items available.`);
+    return;
+    }
+    }
 
-            document.getElementById("btnCheckout").disabled = false;
+    const phone = document.getElementById('custPhone').value.trim();
+    if (!/^(97|98)\d{8}$/.test(phone)) {
+    return alert("Phone number must be exactly 10 digits and start with 97 or 98.");
+    }
+    if (cart.length === 0) return alert("Cart is empty");
 
-            document.getElementById("r-date").innerText = "";
-            document.getElementById("r-cust").innerText = "";
-            document.getElementById("r-items").innerHTML = "";
-            document.getElementById("r-sub").innerText = "Rs.0.00";
-            document.getElementById("r-disc").innerText = "Rs.0.00";
-            document.getElementById("r-total").innerText = "Rs.0.00";
-            document.getElementById("r-method").innerText = "Cash";
-            document.getElementById("r-txn").innerText = "";
-            document.getElementById("r-txn-row").style.display = "none";
+    const btnCheckout = document.getElementById("btnCheckout");
+    if (btnCheckout) btnCheckout.disabled = true;
 
-            updateTotals();
-        }
+    const name = document.getElementById('custName').value || "Walk-in Customer";
+    const subtotal = parseFloat(document.getElementById('subtotal').innerText.replace('Rs.', ''));
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const total = parseFloat(document.getElementById('total').innerText.replace('Rs.', ''));
 
-        function removeItem(index) {
-            cart.splice(index, 1);
-            renderCart();
-        }
+    const data = {
+    phone: phone,
+    name: name,
+    subtotal: subtotal,
+    discount: discount,
+    total: total,
+    cart: cart
+    };
+
+    try {
+    const response = await fetch('/pos/checkout/', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+    });
+
+    if (response.ok) {
+    const result = await response.json();
+
+document.getElementById('r-bill').innerText = `#${result.bill_no}`;
+                document.getElementById('r-date').innerText = new Date().toLocaleString();
+                document.getElementById('r-cust').innerText = name + " (" + phone + ")";
+                document.getElementById('r-cashier').innerText = result.cashier || '{{ user.username }}';
+                document.getElementById('r-total').innerText = `Rs.${total.toFixed(2)}`;
+
+                document.getElementById('r-method').innerText = 'Cash';
+
+                document.getElementById('r-items').innerHTML = cart.map(item => `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td class="text-center">${item.qty}</td>
+                        <td class="text-end">Rs.${(item.price * item.qty).toFixed(2)}</td>
+                    </tr>
+                `).join('');
+
+    alert(`Checkout completed successfully.`);
+    printReceipt();
+    } else {
+    let errorMessage = "Error processing transaction.";
+    try {
+    const result = await response.json();
+    if (result && result.message) {
+    errorMessage = result.message;
+    }
+    } catch (error) {
+    const fallback = await response.text();
+    if (fallback) {
+    errorMessage = fallback;
+    }
+    }
+    alert(errorMessage);
+    if (btnCheckout) btnCheckout.disabled = false;
+    }
+    } catch (err) {
+    alert("Connection error: " + err.message);
+    if (btnCheckout) btnCheckout.disabled = false;
+    }
+    }
+
+    function printReceipt() {
+    window.addEventListener("afterprint", resetPOS, { once: true });
+    window.print();
+    }
+
+    function resetPOS() {
+    cart = [];
+    document.getElementById("custPhone").value = "";
+    document.getElementById("custName").value = "";
+    document.getElementById("discount").value = 0;
+
+    renderCart();
+
+    document.getElementById("btnCheckout").disabled = false;
+
+    document.getElementById("r-bill").innerText = "#";
+    document.getElementById("r-date").innerText = "";
+    document.getElementById("r-cust").innerText = "";
+    document.getElementById("r-cashier").innerText = "";
+    document.getElementById("r-items").innerHTML = "";
+    document.getElementById("r-sub").innerText = "Rs.0.00";
+    document.getElementById("r-disc").innerText = "-Rs.0.00";
+    document.getElementById("r-total").innerText = "Rs.0.00";
+    document.getElementById("r-method").innerText = "Cash";
+
+    updateTotals();
+    }
+
+    function removeItem(index) {
+    cart.splice(index, 1);
+    renderCart();
+    }
     </script>
     <style>
         .input-group-merge:focus-within {
@@ -387,53 +376,43 @@
         }
     </style>
     <!-- Hidden Receipt Area (Only shows when printing) -->
-    <div id="receipt-print" style="width:80mm;font-family:monospace;">
-
-        <div style="text-align:center;">
-            <h4 style="margin:0;">HAMRO MART</h4>
-            <div>VAT BILL</div>
-            <div>Bhaktapur, Nepal</div>
-
-            <div style="display:flex;justify-content:space-between;font-size:12px;">
-                <span>VAT No: 123456789</span>
-                <span>Phone: 98xxxxxxxx</span>
+    <div id="receipt-print" class="d-print-block" style="width: 80mm; font-family: sans-serif; display: none;">
+        <div class="text-center">
+            <h4 class="fw-bold mb-0">HAMRO MART</h4>
+            <small class="text-muted">RECEIPT</small>
+            <small class="d-block text-muted">Bhaktapur, Nepal</small>
+            <div class="d-flex justify-content-between">
+                <small class="text-muted">VAT No: 123456789</small>
+                <small class="text-muted">Phone: 98xxxxxxxx</small>
             </div>
         </div>
     
 
         <hr>
-
-        <div style="display:flex;justify-content:space-between;font-size:12px;">
-            <span><b>Bill No:</b> <span id="r-bill"></span></span>
-            <span><b>Date:</b> <span id="r-date"></span></span>
+        <div class="d-flex justify-content-between small">
+            <span><strong>Bill No:</strong> <span id="r-bill">#</span></span>
+            <span><strong>Date:</strong> <span id="r-date"></span></span>
         </div>
-
-        <div style="font-size:12px;">
-            <b>Customer:</b>
-            <span id="r-cust"></span>
-        </div>
-
-     <hr>
-
-        <table style="width:100%;font-size:12px;">
+        <div class="small"><strong>Customer:</strong> <span id="r-cust"></span></div>
+        <div class="small"><strong>Cashier:</strong> <span id="r-cashier"></span></div>
+        <hr>
+        <table class="table table-sm table-borderless small">
             <thead>
-                <tr>
-                    <th align="left">Item</th>
-                    <th align="center">Qty</th>
-                    <th align="right">Price</th>
+                <tr class="border-bottom">
+                    <th>Item</th>
+                    <th class="text-center">Qty</th>
+                    <th class="text-end">Price</th>
                 </tr>
             </thead>
             <tbody id="r-items"></tbody>
         </table>
         <hr>
-        <div class="d-flex justify-content-between"><span>Subtotal:</span><span id="r-sub">Rs.0.00</span></div>
-        <div class="d-flex justify-content-between"><span>Discount:</span><span id="r-disc">Rs.0.00</span></div>
-        <div class="h5 d-flex justify-content-between fw-bold"><span>TOTAL:</span><span id="r-total">Rs.0.00</span>
-        </div>
-        <div class="d-flex justify-content-between"><span>Payment Method:</span><span id="r-method">Cash</span></div>
-        <div class="d-flex justify-content-between" id="r-txn-row" style="display: none !important;"><span>Txn
-                ID:</span><span id="r-txn"></span></div>
+        <div class="d-flex justify-content-between small"><span>Subtotal</span><span id="r-sub">Rs.0.00</span></div>
+        <div class="d-flex justify-content-between small text-danger"><span>Discount</span><span id="r-disc">-Rs.0.00</span></div>
+        <div class="d-flex justify-content-between fw-bold h5 mt-2"><span>TOTAL</span><span id="r-total">Rs.0.00</span></div>
         <hr>
-        <p class="text-center">Thank you for shopping!</p>
+        <div class="d-flex justify-content-between small"><span>Payment Method</span><span id="r-method">Cash</span></div>
+        <hr>
+        <div class="text-center small text-muted">Thank you for your purchase!</div>
     </div>
 {% endblock %}

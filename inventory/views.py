@@ -4,6 +4,8 @@ from urllib import request
 from django.shortcuts import render
 from products.models import Product, Category
 
+
+
 def product_list(request):
     query = request.GET.get('q', '')
     category_id = request.GET.get('category', '')
@@ -38,3 +40,13 @@ def product_list(request):
         'selected_stock': stock_status,
     }
     return render(request, 'products.html', context)
+
+def low_stock_items(request):
+    """Display only low stock items"""
+    low_stock_products = Product.objects.filter(quantity__lte=5).select_related('category').order_by('quantity')
+    
+    context = {
+        'products': low_stock_products,
+        'total_low_stock': low_stock_products.count(),
+    }
+    return render(request, 'inventory/low_stock.html', context)

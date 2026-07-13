@@ -84,7 +84,7 @@ def process_sale(request):
                 total=data['total'],
                 payment_method='Cash',
                 payment_status='Completed',
-                transaction_id=None,
+                cashier=request.user,
             )
 
             is_admin = request.user.is_superuser
@@ -151,7 +151,7 @@ def process_sale(request):
                 "payment_status": "Completed",
                 "sale_id": sale.id,
                 "bill_no": sale.bill_no,
-                "transaction_id": ""
+                "cashier": sale.cashier.username if sale.cashier else None,
             })
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=400)

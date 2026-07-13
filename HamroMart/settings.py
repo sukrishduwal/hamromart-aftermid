@@ -56,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "django.contrib.messages.middleware.MessageMiddleware",
+    'HamroMart.middleware.AutoLogoutMiddleware',  # Add this line for auto logout
 ]
 
 ROOT_URLCONF = 'HamroMart.urls'

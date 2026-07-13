@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect
 from django.core.exceptions import PermissionDenied
-
+from django.contrib.auth import authenticate, login, logout
 
 @login_required
 def staff_management(request):
@@ -62,3 +62,6 @@ def add_group(request):
         return redirect("staff_management")
 
     return render(request, "staff/add_group.html")
+def logout_view(request):
+    logout(request)
+    return redirect('login')

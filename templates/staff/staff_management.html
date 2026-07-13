@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    .input-group-merge:focus-within {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+    }
+</style>
 
 {% if messages %}
 {% for message in messages %}
@@ -9,60 +15,75 @@
 </div>
 {% endfor %}
 {% endif %}
-<div class="container mt-4">
+<div class="container-flex text-center justify-content-center align-items-center" style="padding-top: 20px; padding-bottom: 20px;">
 
-    <div class="row">
-         <!-- ➕ Add Staff -->
-        <div class="col-md-3">
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h4>Add Staff</h4>
-                </div>
+    <div class="row justify-content-center align-items-start g-4" style="margin-top: 10px;">
+         <!-- Add Staff -->
+        <div class="col-md-4">
+            <div class="p-3 shadow-sm" style="overflow-y: auto; height: 430px; background: #CEECF5; border-radius: 12px;">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header  text-black font-size: 1.15rem; font-weight: 600; " style="background-color: #ffb6c1;">
+                        <h4 class="mb-0">Add Staff</h4>
+                    </div>
 
-                <div class="card-body">
+                    <div class="card-body">
 
-                    <form method="POST">
-                        {% csrf_token %}
+                        <form method="POST">
+                            {% csrf_token %}
 
-                        <input type="text" name="username" class="form-control mb-2" placeholder="Username" required>
+                            <input type="text" name="username" class="form-control mb-2" placeholder="Username" required>
 
-                        <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name">
+                            <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name">
 
-                        <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name">
+                            <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name">
 
-                        <input type="password" name="password" class="form-control mb-2" placeholder="Password"
-                            required>
+                            <input type="password" name="password" class="form-control mb-2" placeholder="Password"
+                                required>
 
-                        <div class="input-group mb-3">
-                            <select name="group" class="form-control" required>
-                                <option value="" selected disabled>Select Group</option>
+                            <div class="input-group mb-3">
+                                <select name="group" class="form-control" required>
+                                    <option value="" selected disabled>Select Group</option>
 
-                                {% for group in groups %}
-                                <option value="{{ group.id }}">
-                                    {{ group.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                                    {% for group in groups %}
+                                    <option value="{{ group.id }}">
+                                        {{ group.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
 
-                            <a href="{% url 'add_group' %}" class="btn btn-outline-primary">
-                                + Add
-                            </a>
-                        </div>
+                                <a href="{% url 'add_group' %}" class="btn btn-outline-black" style="background-color: #ffb6c1;">
+                                    + Add
+                                </a>
+                            </div>
 
-                        <button type="submit" class="btn btn-success w-100">
-                            Add Staff
-                        </button>
-                    </form>
+                            <button type="submit" class="btn btn-success w-100 text-black" style="font-size: 1.15rem; font-weight: 600; background-color: #ffb6c1;">
+                                Add Staff
+                            </button>
+                        </form>
 
+                    </div>
                 </div>
             </div>
         </div>
 
-     <!-- 📋 Staff List -->
-        <div class="col-md-7">
-                    <h4>Staff List</h4>
-                    <table class="table table-bordered">
-                        <thead>
+     <!-- Staff List -->
+        <div class="col-md-8">
+            <h4 class="text-start mb-3">Staff List</h4>
+            <div class="col-12 col-md-6 col-lg-6 mb-3 text-start">
+                <div class="input-group input-group-merge" style="border: 1px solid #cbd5e1; border-radius: 10px; overflow: hidden; background-color: #fff; transition: all 0.2s ease;">
+                    <span class="input-group-text bg-white border-0 py-2.5 ps-3 text-muted">
+                        <i class="bi bi-search" style="font-size: 1.1rem;"></i>
+                    </span>
+                    <input type="text" name="q" id="staffSearch" class="form-control border-0 py-2.5 ps-1" placeholder="Search staff name..." value="{{ query }}" autocomplete="off" style="box-shadow: none; font-size: 0.95rem;">
+                    <button class="btn border-0 bg-transparent text-muted py-2.5 pe-3" type="button" id="clearSearch" style="display: {% if query %}block{% else %}none{% endif %}; outline: none; box-shadow: none;">
+                        <i class="bi bi-x-circle-fill" style="font-size: 1.1rem; color: #94a3b8;"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="row" style="margin-top: 10px;">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
                             <tr>
                                 <th>Username</th>
                                 <th>Name</th>
@@ -70,25 +91,87 @@
                             </tr>
                         </thead>
 
-                        <tbody>
+                        <tbody >
                             {% for user in staff_list %}
-                            <tr>
-                                <td>{{ user.username }}</td>
-                                <td>{{ user.first_name }} {{ user.last_name }}</td>
-                                <td>
-                                    {% for group in user.groups.all %}
-                                    <span class="badge bg-info">
-                                        {{ group.name }}
-                                    </span>
-                                    {% endfor %}
+                                <tr class="staff-row" data-username="{{ user.username|lower }}" data-name="{{ user.first_name|lower }} {{ user.last_name|lower }}" data-role="{% for group in user.groups.all %}{{ group.name|lower }} {% endfor %}">
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                    <td>
+                                        {% for group in user.groups.all %}
+                                            <span class="badge bg-info text-white">
+                                                {{ group.name }}
+                                            </span>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            <tr id="noResultsRow" style="display: none;">
+                                <td colspan="3" class="text-center py-4 text-muted">
+                                    <i class="bi bi-search style-2rem" style="font-size: 2rem; display: block;"></i>
+                                    No staff members match your search criteria.
                                 </td>
                             </tr>
-                            {% endfor %}
                         </tbody>
                     </table>
+                </div>
             </div>
         </div>
     </div>    
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('staffSearch');
+    const clearSearchBtn = document.getElementById('clearSearch');
+    const staffRows = document.querySelectorAll('.staff-row');
+    const noResultsRow = document.getElementById('noResultsRow');
+
+    function filterStaffTable() {
+        const query = searchInput.value.toLowerCase().trim();
+
+        if (query.length > 0) {
+            clearSearchBtn.style.display = 'block';
+        } else {
+            clearSearchBtn.style.display = 'none';
+        }
+
+        let visibleCount = 0;
+
+        staffRows.forEach(row => {
+            const username = row.getAttribute('data-username') || '';
+            const name = row.getAttribute('data-name') || '';
+            const role = row.getAttribute('data-role') || '';
+
+            const matches = username.includes(query) || 
+                            name.includes(query) || 
+                            role.includes(query);
+
+            if (matches) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (visibleCount === 0 && staffRows.length > 0) {
+            noResultsRow.style.display = '';
+        } else {
+            noResultsRow.style.display = 'none';
+        }
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterStaffTable);
+    }
+
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            filterStaffTable();
+            searchInput.focus();
+        });
+    }
+});
+</script>
 {% endblock %}

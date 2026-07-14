@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -17,10 +18,10 @@
     
     <style>
         :root {
-            --primary: #eeff00; /* Indigo */
-            --primary-hover: #03c8fe;
-            --bg-start: #0f172a; /* Slate 900 */
-            --bg-end: #1e293b; /* Slate 800 */
+            --primary: #ffb6c1b9; 
+            --primary-hover: #ffffff;
+            --bg-start: #ffb6c18a; 
+            --bg-end: #ffb6c18a; 
             --font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
@@ -93,18 +94,24 @@
             font-size: 2.25rem;
             box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
         }
+
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
     </style>
 </head>
 
 <body>
     <div class="card login-card">
-        <div class="text-center mb-4">
-            <div class="logo-icon mb-3">
-                <i class="bi bi-box-seam-fill"></i>
-            </div>
+            <a class="d-inline-block me-3 ">
+                <img src="{% static 'images/logo.png' %}" alt="Clothing Mart Logo" class="logo-img">
+            </a>
             <h3 class="fw-extrabold text-dark mb-1" style="letter-spacing: 0.5px;">Hamro Mart</h3>
             <p class="text-muted small">Sign in to access your inventory portal</p>
-        </div>
         
         <form method="post">
             {% csrf_token %}
